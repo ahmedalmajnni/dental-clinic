@@ -40,8 +40,13 @@ class Billing
         $paid = (float) PaymentAllocation::where('invoice_id', $invoiceId)->sum('amount');
         $balance = max(self::round2($total - $paid), 0);
 
+        // Base the status on the BALANCE, not the total. If every line is
+        // removed (e.g. its treatment is deleted) while a payment is still
+        // allocated, total drops to 0 but the balance is still fully covered
+        // (0) — that invoice is correctly "paid", not "partial". Using total
+        // for this check used to mislabel it as partial forever.
         $status = 'open';
-        if ($total > 0 && $paid >= $total) {
+        if ($balance <= 0 && $paid > 0) {
             $status = 'paid';
         } elseif ($paid > 0) {
             $status = 'partial';

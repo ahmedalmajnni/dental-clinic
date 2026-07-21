@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register the "role" alias so routes can use ->middleware('role:admin').
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'active' => \App\Http\Middleware\EnsureAccountActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

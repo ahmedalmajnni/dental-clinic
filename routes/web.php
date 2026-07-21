@@ -27,8 +27,10 @@ Route::post('/staff-register', [StaffRegistrationController::class, 'store'])->n
 
 Route::get('/', fn () => redirect('/dashboard'));
 
-// ---- Everything below requires login ----
-Route::middleware('auth')->group(function () {
+// ---- Everything below requires login AND an active account (deactivating an
+// account takes effect on the person's very next request, not just at their
+// next login) ----
+Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Patient self-service: request an appointment and track its status.
