@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict JcwqaFzA9lH26SF8QtywunAQjD7VCokiGswnUU5PQ6ZFkHCTNJlos6PjVNvfPkf
+\restrict GWO2IA6zBFVe7daWzmnYUN4htfzsgyOU23LbvWvC2jNf3biMz3TqC4DKozXhFwz
 
 -- Dumped from database version 17.10
 -- Dumped by pg_dump version 17.10
@@ -597,9 +597,9 @@ COPY public.account (id, email, password_hash, role, employee_id, patient_id, is
 019f855b-f785-734d-b41c-f0c065ae78cb	patient4@example.com	$2y$12$Sgs9dlc1Jl8ScwnFPiUbC.v0QWwevmYcMjVAE5rrUarqy.Hyl8J1C	patient	\N	019f855b-ef80-722d-9744-ccf0445357c7	t	\N	2026-07-21 18:47:04.71003+03
 019f855b-f884-72be-a157-954c88b49b6f	patient5@example.com	$2y$12$edXTI2nkj1ARksyALU94HuOyV9l0ZC8Iazi0p..uvKginMo3a1qhy	patient	\N	019f855b-ef81-7206-a3a4-e1799aef242b	t	\N	2026-07-21 18:47:04.965355+03
 019f855b-ecdc-715b-aaa4-1e78ebc8675a	admin@clinic.local	$2y$12$krhkibZZkteps8x1jSxHRu9X8m6ShiDAuoMNx6Oyc1JtNN6eKb5AW	admin	019f855b-ebd9-726b-a24f-794e7f8c8690	\N	t	2026-07-21 19:53:22+03	2026-07-21 18:47:01.69696+03
-019f855f-f378-7206-bc21-3acff4f94498	dr.adam.hart@clinic.local	$2y$12$thSdibxTEzcLyMIjDMcL4e2aT1bAvq7pVELS8flk99Wn1p76NJmGa	employee	019f855f-f23f-7240-a624-ae618e627e9b	\N	t	2026-07-21 19:57:09+03	2026-07-21 18:51:25.817162+03
 019f855b-f380-7267-8125-25181f129225	sami.lab@clinic.local	$2y$12$ylbPTC3QdEpHIXb3ButfW.Vz4GymDKO/UQ25ZLogP19qby92aMGte	employee	019f855b-ef73-73cb-be04-56bfcd69ab21	\N	t	2026-07-21 19:58:41+03	2026-07-21 18:47:03.681339+03
 019f855b-f280-7085-a755-326a5fc0bc6d	rana.reception@clinic.local	$2y$12$u04XXftuGin7DyEMAMGiu.MA.Jylbg/7RiPPpglVaDXX7GFLJuk9m	employee	019f855b-ef71-7374-b7ec-0020ea1df76c	\N	t	2026-07-21 19:59:25+03	2026-07-21 18:47:03.425435+03
+019f855f-f378-7206-bc21-3acff4f94498	dr.adam.hart@clinic.local	$2y$12$thSdibxTEzcLyMIjDMcL4e2aT1bAvq7pVELS8flk99Wn1p76NJmGa	employee	019f855f-f23f-7240-a624-ae618e627e9b	\N	t	2026-07-21 20:25:52+03	2026-07-21 18:51:25.817162+03
 \.
 
 
@@ -1490,5 +1490,5 @@ ALTER TABLE ONLY public.treatment
 -- PostgreSQL database dump complete
 --
 
-\unrestrict JcwqaFzA9lH26SF8QtywunAQjD7VCokiGswnUU5PQ6ZFkHCTNJlos6PjVNvfPkf
+\unrestrict GWO2IA6zBFVe7daWzmnYUN4htfzsgyOU23LbvWvC2jNf3biMz3TqC4DKozXhFwz
 
