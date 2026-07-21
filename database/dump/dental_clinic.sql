@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict FlOsFAl4aRiZv3vkBdShM8zOyYhYO2OoZqnAfThuIU3fJXsWFirmsKMgcHed8lw
+\restrict JcwqaFzA9lH26SF8QtywunAQjD7VCokiGswnUU5PQ6ZFkHCTNJlos6PjVNvfPkf
 
 -- Dumped from database version 17.10
 -- Dumped by pg_dump version 17.10
@@ -591,15 +591,15 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 COPY public.account (id, email, password_hash, role, employee_id, patient_id, is_active, last_login, created_at) FROM stdin;
 019f855b-f180-7144-8ed7-1e2a1c04f9ee	dr.lina.fares@clinic.local	$2y$12$aIKmXj7a2WQh0m3nuAgTyu4cWZYvpFS.cZks4YZm/UtbPaB.Sc9xK	employee	019f855b-ef70-7167-94b3-13918ce441e0	\N	t	\N	2026-07-21 18:47:03.169631+03
-019f855b-f280-7085-a755-326a5fc0bc6d	rana.reception@clinic.local	$2y$12$u04XXftuGin7DyEMAMGiu.MA.Jylbg/7RiPPpglVaDXX7GFLJuk9m	employee	019f855b-ef71-7374-b7ec-0020ea1df76c	\N	t	\N	2026-07-21 18:47:03.425435+03
-019f855b-f380-7267-8125-25181f129225	sami.lab@clinic.local	$2y$12$ylbPTC3QdEpHIXb3ButfW.Vz4GymDKO/UQ25ZLogP19qby92aMGte	employee	019f855b-ef73-73cb-be04-56bfcd69ab21	\N	t	\N	2026-07-21 18:47:03.681339+03
 019f855b-f484-72ab-a613-b87da5487ca9	patient1@example.com	$2y$12$aAa0a9GedCPel1H1JAev8Oz.4mKkWoMlZWWa06c9XBa02lboOV4ra	patient	\N	019f855b-ef7b-7145-b114-bb7e4db8bb41	t	\N	2026-07-21 18:47:03.941139+03
 019f855b-f585-71e1-85b0-aaadb6f676ee	patient2@example.com	$2y$12$yRKtCIXp8dJ15CUjbwstye3fv9EopszoUweETR4R2yeBjNjrz0Qx2	patient	\N	019f855b-ef7d-719e-b68d-6a16c9f56427	t	\N	2026-07-21 18:47:04.197503+03
 019f855b-f684-7061-a126-4fd1e04ecd77	patient3@example.com	$2y$12$2ukyh9266YmFraC3sm3T6Oo3CLV7pV9/bTDf1G3ZFB6x/CXgEWvJK	patient	\N	019f855b-ef7e-734c-b8cb-bbbf81a755fb	t	\N	2026-07-21 18:47:04.453437+03
 019f855b-f785-734d-b41c-f0c065ae78cb	patient4@example.com	$2y$12$Sgs9dlc1Jl8ScwnFPiUbC.v0QWwevmYcMjVAE5rrUarqy.Hyl8J1C	patient	\N	019f855b-ef80-722d-9744-ccf0445357c7	t	\N	2026-07-21 18:47:04.71003+03
 019f855b-f884-72be-a157-954c88b49b6f	patient5@example.com	$2y$12$edXTI2nkj1ARksyALU94HuOyV9l0ZC8Iazi0p..uvKginMo3a1qhy	patient	\N	019f855b-ef81-7206-a3a4-e1799aef242b	t	\N	2026-07-21 18:47:04.965355+03
-019f855f-f378-7206-bc21-3acff4f94498	dr.adam.hart@clinic.local	$2y$12$thSdibxTEzcLyMIjDMcL4e2aT1bAvq7pVELS8flk99Wn1p76NJmGa	employee	019f855f-f23f-7240-a624-ae618e627e9b	\N	t	\N	2026-07-21 18:51:25.817162+03
-019f855b-ecdc-715b-aaa4-1e78ebc8675a	admin@clinic.local	$2y$12$krhkibZZkteps8x1jSxHRu9X8m6ShiDAuoMNx6Oyc1JtNN6eKb5AW	admin	019f855b-ebd9-726b-a24f-794e7f8c8690	\N	t	2026-07-21 15:53:54+03	2026-07-21 18:47:01.69696+03
+019f855b-ecdc-715b-aaa4-1e78ebc8675a	admin@clinic.local	$2y$12$krhkibZZkteps8x1jSxHRu9X8m6ShiDAuoMNx6Oyc1JtNN6eKb5AW	admin	019f855b-ebd9-726b-a24f-794e7f8c8690	\N	t	2026-07-21 19:53:22+03	2026-07-21 18:47:01.69696+03
+019f855f-f378-7206-bc21-3acff4f94498	dr.adam.hart@clinic.local	$2y$12$thSdibxTEzcLyMIjDMcL4e2aT1bAvq7pVELS8flk99Wn1p76NJmGa	employee	019f855f-f23f-7240-a624-ae618e627e9b	\N	t	2026-07-21 19:57:09+03	2026-07-21 18:51:25.817162+03
+019f855b-f380-7267-8125-25181f129225	sami.lab@clinic.local	$2y$12$ylbPTC3QdEpHIXb3ButfW.Vz4GymDKO/UQ25ZLogP19qby92aMGte	employee	019f855b-ef73-73cb-be04-56bfcd69ab21	\N	t	2026-07-21 19:58:41+03	2026-07-21 18:47:03.681339+03
+019f855b-f280-7085-a755-326a5fc0bc6d	rana.reception@clinic.local	$2y$12$u04XXftuGin7DyEMAMGiu.MA.Jylbg/7RiPPpglVaDXX7GFLJuk9m	employee	019f855b-ef71-7374-b7ec-0020ea1df76c	\N	t	2026-07-21 19:59:25+03	2026-07-21 18:47:03.425435+03
 \.
 
 
@@ -806,7 +806,6 @@ COPY public.report (id, appointment_id, patient_id, doctor_id, diagnosis, notes,
 019f855b-ef9c-7230-9da3-61dd7eb4ebbd	019f855b-ef92-708b-9aae-9d6264a1a58a	019f855b-ef81-7206-a3a4-e1799aef242b	019f855b-ef70-7167-94b3-13918ce441e0	Caries in lower left first molar	Cavity cleaned and filled. Advised fluoride toothpaste.	2027-01-21	2026-07-21 18:47:02.684884+03
 019f855b-efa0-71c1-a21f-01a19c811121	019f855b-ef8e-729a-8226-f1c69a78e7b5	019f855b-ef7e-734c-b8cb-bbbf81a755fb	019f855b-ef70-7167-94b3-13918ce441e0	Generalised plaque and mild gingivitis	Full scaling done. Recommended daily flossing.	2027-01-21	2026-07-21 18:47:02.688939+03
 019f855b-efa3-70df-ac23-674d3c90d5ad	019f855b-ef90-734b-8147-e35b43033d14	019f855b-ef80-722d-9744-ccf0445357c7	019f855b-ef70-7167-94b3-13918ce441e0	Irreversible pulpitis, upper right premolar	Root canal planned over two visits.	2027-01-21	2026-07-21 18:47:02.691858+03
-019f855b-efa6-7395-8b05-22f4ee94e0a4	019f855b-ef89-73fe-87e6-0bf233dfa4f1	019f855b-ef7b-7145-b114-bb7e4db8bb41	019f855b-ef70-7167-94b3-13918ce441e0	Impacted lower third molar	Referred for surgical extraction.	2027-01-21	2026-07-21 18:47:02.694458+03
 \.
 
 
@@ -1491,5 +1490,5 @@ ALTER TABLE ONLY public.treatment
 -- PostgreSQL database dump complete
 --
 
-\unrestrict FlOsFAl4aRiZv3vkBdShM8zOyYhYO2OoZqnAfThuIU3fJXsWFirmsKMgcHed8lw
+\unrestrict JcwqaFzA9lH26SF8QtywunAQjD7VCokiGswnUU5PQ6ZFkHCTNJlos6PjVNvfPkf
 
