@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LabCaseController;
 use App\Http\Controllers\MediaController;
@@ -25,7 +26,8 @@ Route::post('/signup', [AuthController::class, 'signup']);
 Route::get('/staff-register', [StaffRegistrationController::class, 'create'])->name('staff-register.create');
 Route::post('/staff-register', [StaffRegistrationController::class, 'store'])->name('staff-register.store');
 
-Route::get('/', fn () => redirect('/dashboard'));
+// The public front page. Signed-in visitors are bounced to their dashboard.
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // ---- Everything below requires login AND an active account (deactivating an
 // account takes effect on the person's very next request, not just at their

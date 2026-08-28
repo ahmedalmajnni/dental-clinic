@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>@yield('title', 'Dental Clinic') · Dental Clinic</title>
-  <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}?v={{ filemtime(public_path('css/style.css')) }}">
 </head>
 <body>
   @auth
     @php($u = auth()->user())
     <nav class="topbar">
       <span class="brand">🦷 Dental Clinic</span>
-      <a href="{{ route('dashboard') }}">Dashboard</a>
+      <a href="{{ route('dashboard') }}">Home</a>
 
       @if(in_array($u->role, ['admin','employee']))
         <a href="{{ route('patients.index') }}">Patients</a>

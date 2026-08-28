@@ -9,13 +9,13 @@
   <div class="card"><p class="muted">No appointments yet.</p></div>
 @else
 <table>
-  <thead><tr><th>When</th><th>Patient</th><th>Doctor</th><th>Branch</th><th>Status</th><th></th></tr></thead>
+  <thead><tr><th>When</th><th>Patient</th>@if($showDoctor)<th>Doctor</th>@endif<th>Branch</th><th>Status</th><th></th></tr></thead>
   <tbody>
     @foreach($appointments as $a)
       <tr>
         <td>{{ $a->scheduled_at->format('d/m/Y H:i') }}</td>
         <td>{{ $a->patient->name }}</td>
-        <td>{{ $a->doctor->name }}</td>
+        @if($showDoctor)<td>{{ $a->doctor->name }}</td>@endif
         <td>{{ $a->branch->name }}</td>
         <td><span class="badge">{{ $a->status }}</span></td>
         <td class="actions">

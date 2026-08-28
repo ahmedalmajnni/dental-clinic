@@ -8,16 +8,42 @@ use App\Models\Employee;
 use App\Models\Patient;
 use App\Models\Report;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AppointmentController extends Controller
 {
     private const STATUSES = ['booked', 'completed', 'cancelled', 'no_show'];
 
+    /**
+     * A plain doctor only ever deals with their own appointments — they have no
+     * relation to what other doctors have booked. Admin and reception (who run
+     * the whole clinic) are exempt, same as AppointmentRequestController.
+     */
+    private function isRestrictedDoctor(): bool
+    {
+        $user = Auth::user();
+
+        return $user->employee?->job_title === 'doctor' && ! $user->seesAllRequests();
+    }
+
+    /**
+     * Mirrors AppointmentRequestController::ensureCanHandle() — a restricted
+     * doctor may only reach appointments booked with them.
+     */
+    private function ensureCanHandle(Appointment $appointment): void
+    {
+        if ($this->isRestrictedDoctor() && $appointment->doctor_id !== Auth::user()->employee_id) {
+            abort(403, 'This appointment belongs to another doctor.');
+        }
+    }
+
     private function formData(): array
     {
+        $restricted = $this->isRestrictedDoctor();
+
         return [
             'patients' => Patient::orderBy('name')->get(),
-            'doctors' => Employee::orderBy('name')->get(),
+            'doctors' => $restricted ? collect([Auth::user()->employee]) : Employee::orderBy('name')->get(),
             'branches' => Branch::orderBy('name')->get(),
             'statuses' => self::STATUSES,
         ];
@@ -25,16 +51,24 @@ class AppointmentController extends Controller
 
     public function index()
     {
+        $restricted = $this->isRestrictedDoctor();
+
         $appointments = Appointment::with(['patient', 'doctor', 'branch'])
+            ->when($restricted, fn ($q) => $q->where('doctor_id', Auth::user()->employee_id))
             ->orderByDesc('scheduled_at')->get();
 
-        return view('appointments.index', compact('appointments'));
+        return view('appointments.index', ['appointments' => $appointments, 'showDoctor' => ! $restricted]);
     }
 
     public function create()
     {
+        $appointment = new Appointment();
+        if ($this->isRestrictedDoctor()) {
+            $appointment->doctor_id = Auth::user()->employee_id;
+        }
+
         return view('appointments.form', array_merge($this->formData(), [
-            'appointment' => new Appointment(), 'report' => null,
+            'appointment' => $appointment, 'report' => null,
             'action' => route('appointments.store'), 'method' => 'POST',
         ]));
     }
@@ -44,7 +78,11 @@ class AppointmentController extends Controller
         if (! $request->input('scheduled_at')) {
             return back()->withInput()->with('flash', ['type' => 'error', 'message' => 'Please choose a valid date and time.']);
         }
-        $appointment = Appointment::create($this->data($request));
+        $data = $this->data($request);
+        if ($this->isRestrictedDoctor()) {
+            $data['doctor_id'] = Auth::user()->employee_id;
+        }
+        $appointment = Appointment::create($data);
         $this->syncNotes($appointment, $request);
 
         return redirect()->route('appointments.index')->with('flash', ['type' => 'success', 'message' => 'Appointment booked.']);
@@ -52,6 +90,8 @@ class AppointmentController extends Controller
 
     public function edit(Appointment $appointment)
     {
+        $this->ensureCanHandle($appointment);
+
         return view('appointments.form', array_merge($this->formData(), [
             'appointment' => $appointment,
             'report' => Report::where('appointment_id', $appointment->id)->first(),
@@ -61,7 +101,12 @@ class AppointmentController extends Controller
 
     public function update(Request $request, Appointment $appointment)
     {
-        $appointment->update($this->data($request));
+        $this->ensureCanHandle($appointment);
+        $data = $this->data($request);
+        if ($this->isRestrictedDoctor()) {
+            $data['doctor_id'] = $appointment->doctor_id; // cannot hand their own appointment to another doctor
+        }
+        $appointment->update($data);
         $this->syncNotes($appointment, $request);
 
         return redirect()->route('appointments.index')->with('flash', ['type' => 'success', 'message' => 'Appointment updated.']);
@@ -98,6 +143,7 @@ class AppointmentController extends Controller
 
     public function destroy(Appointment $appointment)
     {
+        $this->ensureCanHandle($appointment);
         $appointment->delete();
 
         return redirect()->route('appointments.index')->with('flash', ['type' => 'success', 'message' => 'Appointment deleted.']);
