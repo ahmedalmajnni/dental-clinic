@@ -6,6 +6,7 @@ use App\Http\Controllers\AppointmentRequestController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DoctorAvailabilityController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvoiceController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\LabCaseController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StaffRegistrationController;
 use App\Http\Controllers\TreatmentController;
 use Illuminate\Support\Facades\Route;
@@ -28,12 +30,18 @@ Route::post('/staff-register', [StaffRegistrationController::class, 'store'])->n
 
 // The public front page. Signed-in visitors are bounced to their dashboard.
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/about', [HomeController::class, 'about'])->name('about');
 
 // ---- Everything below requires login AND an active account (deactivating an
 // account takes effect on the person's very next request, not just at their
 // next login) ----
 Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Everyone's own account page — each role edits only their own details.
+    Route::get('my-account', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('my-account', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('my-account/password', [ProfileController::class, 'password'])->name('profile.password');
 
     // Patient self-service: request an appointment and track its status.
     Route::middleware('role:patient')->group(function () {
@@ -53,7 +61,12 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('accounts', [AccountController::class, 'index'])->name('accounts.index');
         Route::get('accounts/requests', [AccountController::class, 'requests'])->name('accounts.requests');
         Route::get('accounts/new', [AccountController::class, 'create'])->name('accounts.create');
+        Route::get('accounts/new-staff', [AccountController::class, 'createStaff'])->name('accounts.create-staff');
+        Route::post('accounts/staff', [AccountController::class, 'storeStaff'])->name('accounts.store-staff');
         Route::post('accounts', [AccountController::class, 'store'])->name('accounts.store');
+        Route::get('accounts/{account}/edit', [AccountController::class, 'edit'])->name('accounts.edit');
+        Route::put('accounts/{account}', [AccountController::class, 'update'])->name('accounts.update');
+        Route::put('accounts/{account}/password', [AccountController::class, 'resetPassword'])->name('accounts.password');
         Route::post('accounts/{account}/approve', [AccountController::class, 'approve'])->name('accounts.approve');
         Route::post('accounts/{account}/reject', [AccountController::class, 'reject'])->name('accounts.reject');
         Route::post('accounts/{account}/toggle', [AccountController::class, 'toggle'])->name('accounts.toggle');
@@ -85,5 +98,14 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('requests/{appointmentRequest}', [AppointmentRequestController::class, 'process'])->name('requests.process');
         Route::post('requests/{appointmentRequest}/schedule', [AppointmentRequestController::class, 'schedule'])->name('requests.schedule');
         Route::post('requests/{appointmentRequest}/decline', [AppointmentRequestController::class, 'decline'])->name('requests.decline');
+
+        // Doctor availability. 'slots' comes before the {doctor} wildcard so it is
+        // not matched as a doctor id.
+        Route::get('availability', [DoctorAvailabilityController::class, 'index'])->name('availability.index');
+        Route::get('availability/slots', [DoctorAvailabilityController::class, 'slots'])->name('availability.slots');
+        Route::get('availability/{doctor}', [DoctorAvailabilityController::class, 'edit'])->name('availability.edit');
+        Route::put('availability/{doctor}', [DoctorAvailabilityController::class, 'update'])->name('availability.update');
+        Route::post('availability/{doctor}/time-off', [DoctorAvailabilityController::class, 'storeTimeOff'])->name('availability.time-off.store');
+        Route::delete('availability/{doctor}/time-off/{timeOff}', [DoctorAvailabilityController::class, 'destroyTimeOff'])->name('availability.time-off.destroy');
     });
 });

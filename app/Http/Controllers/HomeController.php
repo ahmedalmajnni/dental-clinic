@@ -31,22 +31,47 @@ class HomeController extends Controller
             ->orderBy('name')
             ->get(), collect(), false);
 
-        $stats = rescue(fn () => [
+        $stats = $this->stats();
+
+        // The "what we do" list is drawn from the procedures actually performed
+        // here, so it always describes this clinic rather than a generic menu.
+        $services = $this->services();
+
+        return view('home.landing', compact('branches', 'doctors', 'stats', 'services'));
+    }
+
+    /**
+     * The public "about us" page. Unlike the front page this stays readable when
+     * someone is signed in — it is background reading, not the door into the app.
+     */
+    public function about()
+    {
+        return view('home.about', [
+            'stats' => $this->stats(),
+            'services' => $this->services(),
+            'branches' => rescue(fn () => Branch::where('type', 'clinic')->orderBy('name')->get(), collect(), false),
+        ]);
+    }
+
+    /** Headline figures, zeroed rather than fatal if the database is unreachable. */
+    private function stats(): array
+    {
+        return rescue(fn () => [
             'patients' => Patient::count(),
             'doctors' => Employee::where('job_title', 'doctor')->count(),
             'branches' => Branch::where('type', 'clinic')->count(),
             'treatments' => Treatment::where('status', 'done')->count(),
         ], ['patients' => 0, 'doctors' => 0, 'branches' => 0, 'treatments' => 0], false);
+    }
 
-        // The "what we do" list is drawn from the procedures actually performed
-        // here, so it always describes this clinic rather than a generic menu.
-        $services = rescue(fn () => Treatment::query()
+    /** The procedures we most often perform, most common first. */
+    private function services()
+    {
+        return rescue(fn () => Treatment::query()
             ->selectRaw('procedure, count(*) as n')
             ->groupBy('procedure')
             ->orderByDesc('n')
             ->limit(8)
             ->pluck('procedure'), collect(), false);
-
-        return view('home.landing', compact('branches', 'doctors', 'stats', 'services'));
     }
 }

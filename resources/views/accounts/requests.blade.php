@@ -3,9 +3,16 @@
 @section('content')
 <div class="toolbar">
   <h1>Staff access requests</h1>
-  <a href="{{ route('accounts.index') }}" class="btn secondary">← All accounts</a>
+  <div class="actions">
+    <a href="{{ route('accounts.index') }}" class="btn secondary">← All accounts</a>
+    <a href="{{ route('accounts.create-staff') }}" class="btn">+ New staff account</a>
+  </div>
 </div>
-<p class="muted">People who requested staff access. They cannot log in until you approve them.</p>
+<p class="muted">
+  People who requested staff access. They cannot log in until you approve them.
+  Hired someone already? <a href="{{ route('accounts.create-staff') }}">Create their account directly</a> —
+  it is active straight away, with nothing to approve.
+</p>
 
 @if($pending->isEmpty())
   <div class="card"><p class="muted">No pending staff requests.</p></div>

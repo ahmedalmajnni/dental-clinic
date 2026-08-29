@@ -9,10 +9,10 @@
 <body>
   {{-- Guest shell: no flash block and no app nav, since nothing here is signed in. --}}
   <nav class="landing-nav">
-    <span class="brand">🦷 Dental Clinic</span>
+    <a class="brand" href="{{ route('home') }}"><img src="{{ asset('images/logo.svg') }}" alt=""> <span>Dental Clinic</span></a>
+    <a href="{{ route('about') }}">About us</a>
     <a href="{{ route('login') }}">Log in</a>
     <a href="{{ route('signup') }}" class="btn">Sign up as a patient</a>
-    <a href="{{ route('staff-register.create') }}">Staff access</a>
   </nav>
 
   @yield('content')
@@ -20,8 +20,8 @@
   <footer class="site-footer">
     <p>🦷 Dental Clinic — appointments, treatment records and billing, all in one place.</p>
     <p>
-      Already registered? <a href="{{ route('login') }}">Log in</a> ·
-      Joining the team? <a href="{{ route('staff-register.create') }}">Request staff access</a>
+      <a href="{{ route('about') }}">About us</a> ·
+      Already registered? <a href="{{ route('login') }}">Log in</a>
     </p>
   </footer>
 </body>

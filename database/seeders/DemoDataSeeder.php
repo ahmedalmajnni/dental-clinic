@@ -6,6 +6,8 @@ use App\Models\Account;
 use App\Models\Appointment;
 use App\Models\AppointmentRequest;
 use App\Models\Branch;
+use App\Models\DoctorAvailability;
+use App\Models\DoctorTimeOff;
 use App\Models\Employee;
 use App\Models\Invoice;
 use App\Models\InvoiceLine;
@@ -40,7 +42,7 @@ class DemoDataSeeder extends Seeder
 
     /** How many rows each table should end up with (at minimum). */
     private const TARGETS = [
-        'branch' => 3, 'employee' => 5, 'patient' => 5, 'appointment' => 6,
+        'branch' => 4, 'employee' => 8, 'patient' => 5, 'appointment' => 6,
         'report' => 4, 'treatment' => 5, 'payment' => 3,
         'lab_case' => 4, 'media' => 4, 'appointment_request' => 3,
     ];
@@ -53,7 +55,8 @@ class DemoDataSeeder extends Seeder
         $branchSeed = [
             ['name' => 'Main Clinic', 'type' => 'clinic', 'phone' => '011-000-0001', 'address' => 'City centre'],
             ['name' => 'North Branch', 'type' => 'clinic', 'phone' => '011-000-0002', 'address' => 'North district'],
-            ['name' => 'Photo Studio', 'type' => 'studio', 'phone' => '011-000-0003', 'address' => 'Next to Main Clinic'],
+            ['name' => 'South Branch', 'type' => 'clinic', 'phone' => '011-000-0003', 'address' => 'South district'],
+            ['name' => 'West Branch', 'type' => 'clinic', 'phone' => '011-000-0004', 'address' => 'West district'],
         ];
         $summary['branch'] = $this->topUp('branch', Branch::count(), self::TARGETS['branch'],
             fn ($i) => Branch::create($branchSeed[$i % count($branchSeed)]));
@@ -61,10 +64,14 @@ class DemoDataSeeder extends Seeder
 
         // ---- 2. Employees ---------------------------------------------------
         $employeeSeed = [
-            ['name' => 'Dr Adam Hart', 'job_title' => 'doctor', 'phone' => '011-111-0001'],
-            ['name' => 'Dr Lina Fares', 'job_title' => 'doctor', 'phone' => '011-111-0002'],
-            ['name' => 'Rana Reception', 'job_title' => 'reception', 'phone' => '011-111-0003'],
-            ['name' => 'Sami Lab', 'job_title' => 'lab_tech', 'phone' => '011-111-0004'],
+            ['name' => 'Dr Adam Hart', 'job_title' => 'doctor', 'specialty' => 'General dentistry', 'phone' => '011-111-0001'],
+            ['name' => 'Dr Lina Fares', 'job_title' => 'doctor', 'specialty' => 'Orthodontics', 'phone' => '011-111-0002'],
+            ['name' => 'Dr Omar Haddad', 'job_title' => 'doctor', 'specialty' => 'Endodontics', 'phone' => '011-111-0003'],
+            ['name' => 'Dr Sara Nasser', 'job_title' => 'doctor', 'specialty' => 'Oral surgery', 'phone' => '011-111-0004'],
+            ['name' => 'Rana Reception', 'job_title' => 'reception', 'phone' => '011-111-0005'],
+            ['name' => 'Maya Reception', 'job_title' => 'reception', 'phone' => '011-111-0006'],
+            ['name' => 'Sami Lab', 'job_title' => 'lab_tech', 'phone' => '011-111-0007'],
+            ['name' => 'Nour Lab', 'job_title' => 'lab_tech', 'phone' => '011-111-0008'],
         ];
         $summary['employee'] = $this->topUp('employee', Employee::count(), self::TARGETS['employee'],
             function ($i) use ($employeeSeed, $branches) {
@@ -80,6 +87,65 @@ class DemoDataSeeder extends Seeder
                 'branch_id' => $branches->first()->id, 'name' => 'Dr Demo', 'job_title' => 'doctor',
             ])]);
         }
+
+        // ---- 2b. Doctor availability ------------------------------------------
+        // Without weekly hours a doctor is unbookable, so give every demo doctor a
+        // rota. The patterns differ per doctor so the screens are not carbon copies.
+        // weekday follows Carbon's dayOfWeek: 0 = Sunday ... 6 = Saturday.
+        $rotaSeed = [
+            [   // long clinic days, split morning / evening
+                [0, '09:00', '13:00', 30], [0, '16:00', '20:00', 30],
+                [1, '09:00', '13:00', 30], [1, '16:00', '20:00', 30],
+                [2, '09:00', '13:00', 30], [3, '09:00', '13:00', 30],
+                [4, '09:00', '13:00', 30], [4, '16:00', '20:00', 30],
+            ],
+            [   // shorter, later, and works Saturdays
+                [1, '10:00', '14:00', 20], [2, '10:00', '14:00', 20],
+                [3, '12:00', '18:00', 20], [4, '12:00', '18:00', 20],
+                [6, '10:00', '13:00', 20],
+            ],
+            [   // three long mornings, longer appointments
+                [0, '08:00', '12:30', 45], [2, '08:00', '12:30', 45],
+                [4, '08:00', '12:30', 45], [4, '15:00', '18:00', 45],
+            ],
+        ];
+        $addedAvailability = 0;
+        foreach ($doctors->values() as $i => $doctor) {
+            if (DoctorAvailability::where('doctor_id', $doctor->id)->exists()) {
+                continue;   // already has a rota (seeded before, or backfilled by the migration)
+            }
+            foreach ($rotaSeed[$i % count($rotaSeed)] as [$weekday, $start, $end, $slot]) {
+                DoctorAvailability::create([
+                    'doctor_id' => $doctor->id, 'weekday' => $weekday,
+                    'start_time' => $start.':00', 'end_time' => $end.':00',
+                    'slot_minutes' => $slot,
+                ]);
+                $addedAvailability++;
+            }
+        }
+        $summary['doctor_availability'] = $addedAvailability;
+
+        // One doctor also gets exceptions, so the demo shows both kinds at work.
+        $addedTimeOff = 0;
+        $exceptionDoctor = $doctors->first();
+        if ($exceptionDoctor && ! DoctorTimeOff::where('doctor_id', $exceptionDoctor->id)->exists()) {
+            DoctorTimeOff::create([
+                'doctor_id' => $exceptionDoctor->id,
+                'on_date' => now()->addDays(9)->toDateString(),
+                'kind' => 'off',
+                'reason' => 'Dental conference',
+            ]);
+            DoctorTimeOff::create([
+                'doctor_id' => $exceptionDoctor->id,
+                'on_date' => now()->addDays(12)->toDateString(),
+                'kind' => 'extra',
+                'start_time' => '18:00:00', 'end_time' => '21:00:00',
+                'slot_minutes' => 30,
+                'reason' => 'Catch-up evening clinic',
+            ]);
+            $addedTimeOff += 2;
+        }
+        $summary['doctor_time_off'] = $addedTimeOff;
 
         // ---- 3. Patients ----------------------------------------------------
         $patientSeed = [

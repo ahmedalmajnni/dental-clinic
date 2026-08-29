@@ -7,6 +7,8 @@ use App\Models\Branch;
 use App\Models\Employee;
 use App\Models\Patient;
 use App\Models\Report;
+use App\Services\AvailabilityService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -73,7 +75,7 @@ class AppointmentController extends Controller
         ]));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, AvailabilityService $availability)
     {
         if (! $request->input('scheduled_at')) {
             return back()->withInput()->with('flash', ['type' => 'error', 'message' => 'Please choose a valid date and time.']);
@@ -81,6 +83,9 @@ class AppointmentController extends Controller
         $data = $this->data($request);
         if ($this->isRestrictedDoctor()) {
             $data['doctor_id'] = Auth::user()->employee_id;
+        }
+        if ($problem = $this->availabilityProblem($availability, $request, $data, null)) {
+            return back()->withInput()->with('flash', ['type' => 'error', 'message' => $problem]);
         }
         $appointment = Appointment::create($data);
         $this->syncNotes($appointment, $request);
@@ -99,17 +104,65 @@ class AppointmentController extends Controller
         ]));
     }
 
-    public function update(Request $request, Appointment $appointment)
+    public function update(Request $request, Appointment $appointment, AvailabilityService $availability)
     {
         $this->ensureCanHandle($appointment);
         $data = $this->data($request);
         if ($this->isRestrictedDoctor()) {
             $data['doctor_id'] = $appointment->doctor_id; // cannot hand their own appointment to another doctor
         }
+        if ($problem = $this->availabilityProblem($availability, $request, $data, $appointment)) {
+            return back()->withInput()->with('flash', ['type' => 'error', 'message' => $problem]);
+        }
         $appointment->update($data);
         $this->syncNotes($appointment, $request);
 
         return redirect()->route('appointments.index')->with('flash', ['type' => 'success', 'message' => 'Appointment updated.']);
+    }
+
+    /**
+     * The real guard on doctor availability — the slot picker in the form is a
+     * convenience that a hand-crafted POST walks straight past.
+     *
+     * Returns the message to show, or null when the booking is allowed.
+     */
+    private function availabilityProblem(AvailabilityService $availability, Request $request, array $data, ?Appointment $existing): ?string
+    {
+        // Only the admin gets the override. Reception must not be able to quietly
+        // fill a doctor's day off, but the clinic owner sometimes has to squeeze
+        // in an emergency, so the escape hatch is theirs alone.
+        if (Auth::user()->role === 'admin' && $request->boolean('ignore_availability')) {
+            return null;
+        }
+
+        // Cancelling frees a slot rather than taking one, so it is never blocked.
+        if (($data['status'] ?? null) === 'cancelled') {
+            return null;
+        }
+
+        $doctor = Employee::find($data['doctor_id']);
+        if (! $doctor || ! $doctor->isDoctor() || ! $availability->hasAnyAvailability($doctor)) {
+            return null;
+        }
+
+        try {
+            $when = Carbon::parse($data['scheduled_at']);
+        } catch (\Throwable $e) {
+            return 'Please choose a valid date and time.';
+        }
+
+        // Editing the notes or status of a past visit must not be held hostage by
+        // hours that have since changed — only a time that actually moved is checked.
+        if ($existing && $existing->doctor_id === $doctor->id
+            && optional($existing->scheduled_at)->format('Y-m-d H:i') === $when->format('Y-m-d H:i')) {
+            return null;
+        }
+
+        if ($availability->isBookable($doctor, $when, $existing?->id)) {
+            return null;
+        }
+
+        return 'Dr '.$doctor->name.' is not available then — pick one of their open times.';
     }
 
     /**

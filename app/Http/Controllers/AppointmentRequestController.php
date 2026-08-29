@@ -6,6 +6,8 @@ use App\Models\Appointment;
 use App\Models\AppointmentRequest;
 use App\Models\Branch;
 use App\Models\Employee;
+use App\Services\AvailabilityService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -96,20 +98,42 @@ class AppointmentRequestController extends Controller
         return view('requests.index', ['requests' => $query->get()]);
     }
 
-    public function process(AppointmentRequest $appointmentRequest)
+    public function process(AppointmentRequest $appointmentRequest, AvailabilityService $availability)
     {
         $this->ensureCanHandle($appointmentRequest);
         $appointmentRequest->load(['patient', 'doctor', 'branch', 'appointment']);
 
-        return view('requests.process', compact('appointmentRequest'));
+        // Two months is far enough ahead for a routine booking without turning the
+        // dropdown into a wall of dates.
+        $doctor = $appointmentRequest->doctor;
+        $hasAvailability = $availability->hasAnyAvailability($doctor);
+        $slotsByDate = $hasAvailability
+            ? $availability->slotsForRange($doctor, now(), now()->copy()->addDays(60))
+            : [];
+
+        return view('requests.process', compact('appointmentRequest', 'slotsByDate', 'hasAvailability'));
     }
 
     // Approve: create the real appointment, link it, and record the response.
-    public function schedule(Request $request, AppointmentRequest $appointmentRequest)
+    public function schedule(Request $request, AppointmentRequest $appointmentRequest, AvailabilityService $availability)
     {
         $this->ensureCanHandle($appointmentRequest);
         if (! $request->input('scheduled_at')) {
             return back()->with('flash', ['type' => 'error', 'message' => 'Choose a date and time for the appointment.']);
+        }
+
+        // The dropdown only offers free slots, but a stale page or a hand-made POST
+        // can still carry a time the doctor is not working — check it server-side.
+        // A doctor with no hours on file is exempt, or nobody could book them at all.
+        if ($availability->hasAnyAvailability($appointmentRequest->doctor)) {
+            try {
+                $when = Carbon::parse($request->input('scheduled_at'));
+            } catch (\Throwable $e) {
+                $when = null;
+            }
+            if (! $when || ! $availability->isBookable($appointmentRequest->doctor, $when)) {
+                return back()->with('flash', ['type' => 'error', 'message' => 'That time is no longer free — pick one of the doctor\'s open slots.']);
+            }
         }
 
         DB::transaction(function () use ($request, $appointmentRequest) {

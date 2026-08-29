@@ -26,8 +26,39 @@
   <form method="POST" action="{{ route('requests.schedule', $r) }}">
     @csrf
     <label for="scheduled_at">Date &amp; time</label>
-    <input type="datetime-local" id="scheduled_at" name="scheduled_at" required
-           value="{{ $r->preferred_date ? $r->preferred_date->format('Y-m-d\T09:00') : '' }}">
+    @if($hasAvailability)
+      @php
+        // Land the picker on the patient's preferred day, or the first free slot
+        // after it when that day is full.
+        $preferred = $r->preferred_date ? $r->preferred_date->format('Y-m-d') : null;
+        $chosen = null;
+        foreach ($slotsByDate as $day => $slots) {
+            if (! $preferred || $day >= $preferred) {
+                $chosen = $slots[0]->format('Y-m-d\TH:i');
+                break;
+            }
+        }
+      @endphp
+      @if(count($slotsByDate))
+        <select id="scheduled_at" name="scheduled_at" required>
+          @foreach($slotsByDate as $day => $slots)
+            <optgroup label="{{ $slots[0]->format('D d/m/Y') }}">
+              @foreach($slots as $slot)
+                @php($value = $slot->format('Y-m-d\TH:i'))
+                <option value="{{ $value }}" @selected($value === $chosen)>{{ $slot->format('H:i') }}</option>
+              @endforeach
+            </optgroup>
+          @endforeach
+        </select>
+      @else
+        <p class="muted">This doctor has no free slots in the next 60 days.</p>
+      @endif
+    @else
+      <input type="datetime-local" id="scheduled_at" name="scheduled_at" required
+             value="{{ $r->preferred_date ? $r->preferred_date->format('Y-m-d\T09:00') : '' }}">
+      <p class="muted">{{ $r->doctor->name }} has not set their working hours yet, so any time can be entered here.
+        <a href="{{ route('availability.edit', $r->doctor) }}">Set their availability</a>.</p>
+    @endif
 
     <label for="response_note">Message to patient (optional)</label>
     <textarea id="response_note" name="response_note" placeholder="e.g. Please arrive 10 minutes early"></textarea>

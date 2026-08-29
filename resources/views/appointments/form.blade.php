@@ -20,7 +20,7 @@
     <select id="doctor_id" name="doctor_id" required>
       <option value="">— choose doctor —</option>
       @foreach($doctors as $d)
-        <option value="{{ $d->id }}" @selected(old('doctor_id', $appointment->doctor_id) === $d->id)>{{ $d->name }} ({{ $d->job_title }})</option>
+        <option value="{{ $d->id }}" @selected(old('doctor_id', $appointment->doctor_id) === $d->id)>{{ $d->name }}{{ $d->specialty ? ' - '.$d->specialty : '' }}</option>
       @endforeach
     </select>
 
@@ -35,6 +35,22 @@
     <label for="scheduled_at">Date &amp; time</label>
     <input type="datetime-local" id="scheduled_at" name="scheduled_at" required
            value="{{ old('scheduled_at', optional($appointment->scheduled_at)->format('Y-m-d\TH:i')) }}">
+
+    <label for="slot_pick">Open times</label>
+    <select id="slot_pick">
+      <option value="">— choose a doctor and a date —</option>
+    </select>
+    <p class="muted" id="slot_note">Pick a doctor and a date and this lists the times they are actually free.</p>
+
+    @if(auth()->user()->role === 'admin')
+      {{-- Reception must not be able to quietly fill a doctor's day off; the
+           clinic owner sometimes has to squeeze in an emergency. --}}
+      <label for="ignore_availability" style="font-weight:400;">
+        <input type="checkbox" id="ignore_availability" name="ignore_availability" value="1"
+               style="width:auto; margin-right:6px;" @checked(old('ignore_availability'))>
+        Book outside the doctor's hours
+      </label>
+    @endif
 
     <label for="status">Status</label>
     <select id="status" name="status">
@@ -63,4 +79,70 @@
     </div>
   </form>
 </div>
+
+<script>
+  var SLOTS_URL = @json(route('availability.slots'));
+  var IGNORE_ID = @json($isEdit ? $appointment->id : null);
+
+  var doctorField = document.getElementById('doctor_id');
+  var whenField = document.getElementById('scheduled_at');
+  var slotField = document.getElementById('slot_pick');
+  var slotNote = document.getElementById('slot_note');
+  var pending = 0;
+
+  function setSlots(times, message) {
+    slotField.innerHTML = '';
+    var first = document.createElement('option');
+    first.value = '';
+    first.textContent = times.length ? '— pick a free time —' : '— no free times —';
+    slotField.appendChild(first);
+
+    var chosen = whenField.value.slice(11, 16);
+    times.forEach(function (t) {
+      var opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = t;
+      if (t === chosen) opt.selected = true;
+      slotField.appendChild(opt);
+    });
+    slotNote.textContent = message;
+  }
+
+  function loadSlots() {
+    var doctor = doctorField.value;
+    var date = whenField.value.slice(0, 10);
+    if (!doctor || !date) {
+      setSlots([], 'Pick a doctor and a date and this lists the times they are actually free.');
+      return;
+    }
+
+    // Answers can come back out of order when the user keeps changing the date,
+    // so only the newest request is allowed to paint the list.
+    var ticket = ++pending;
+    var url = SLOTS_URL + '?doctor_id=' + encodeURIComponent(doctor) + '&date=' + encodeURIComponent(date);
+    if (IGNORE_ID) url += '&ignore=' + encodeURIComponent(IGNORE_ID);
+
+    fetch(url, { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (ticket !== pending) return;
+        var times = data.slots || [];
+        setSlots(times, times.length
+          ? 'Choosing a time here fills in the box above.'
+          : 'No open times that day — try another date, or set the doctor\'s hours under Availability.');
+      })
+      .catch(function () {
+        if (ticket === pending) setSlots([], 'Could not load open times.');
+      });
+  }
+
+  slotField.addEventListener('change', function () {
+    if (!slotField.value) return;
+    whenField.value = whenField.value.slice(0, 10) + 'T' + slotField.value;
+  });
+
+  doctorField.addEventListener('change', loadSlots);
+  whenField.addEventListener('change', loadSlots);
+  loadSlots();
+</script>
 @endsection

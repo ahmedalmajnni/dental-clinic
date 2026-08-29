@@ -14,20 +14,29 @@ database first, then the web app.
 
 ### 1. Start the database (once per reboot)
 ```powershell
-powershell -File "C:\Users\ASUS I7\Desktop\project clinic\laravel\start-postgres.ps1"
+powershell -File ".\start-postgres.ps1"
 ```
 You should see `127.0.0.1:5432 - accepting connections`.
 
+The script looks for the portable PostgreSQL under your own user folder
+(`%USERPROFILE%\pgsql\bin` and `%USERPROFILE%\pgdata`). If yours lives elsewhere, pass the
+paths in: `powershell -File ".\start-postgres.ps1" -Bin "D:\pgsql\bin" -Data "D:\pgdata"`.
+
 ### 2. Start the web app
 ```powershell
-cd "C:\Users\ASUS I7\Desktop\project clinic\laravel"
 php artisan serve
 ```
 Then open http://127.0.0.1:8000
 
-> `php` is on your PATH after installation (open a fresh terminal). Composer is at
-> `%LOCALAPPDATA%\Microsoft\WinGet\Packages\PHP.PHP.8.3_Microsoft.Winget.Source_8wekyb3d8bbwe\composer.phar`
-> — run it as `php <that path>\composer.phar ...`.
+> **Use the right PHP.** This machine has more than one PHP installed and the app runs on
+> **XAMPP's** (`C:\xampp\php\php.exe`, currently 8.5), which is *not* first on `PATH`. If a bare
+> `php artisan` gives you missing-extension or database-driver errors, call it explicitly:
+>
+> ```powershell
+> C:\xampp\php\php.exe artisan serve
+> ```
+>
+> Confirm which ini is in effect with `php -i | findstr "Loaded Configuration"`.
 
 ### Useful commands
 ```powershell
