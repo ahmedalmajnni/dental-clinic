@@ -36,6 +36,7 @@
   ];
 @endphp
 
+<div class="dashboard-page">
 <div class="page-head">
   <div>
     <h1>{{ $greeting }}, {{ $who }}</h1>
@@ -155,7 +156,7 @@
       <div class="qa-list">
         <a class="qa" href="{{ route('patients.create') }}"><span class="ico">🧑</span> New patient</a>
         <a class="qa" href="{{ route('appointments.create') }}"><span class="ico">📅</span> Book appointment</a>
-        <a class="qa" href="{{ route('treatments.create') }}"><span class="ico">🦷</span> Record treatment</a>
+        <a class="qa" href="{{ route('treatments.create') }}"><img class="qa-logo-icon" src="{{ asset('images/logo.svg') }}" alt=""> Record treatment</a>
         <a class="qa" href="{{ route('payments.create') }}"><span class="ico">💵</span> Take payment</a>
         <a class="qa" href="{{ route('requests.index') }}"><span class="ico">📥</span> Appointment requests</a>
         <a class="qa" href="{{ route('lab-cases.create') }}"><span class="ico">🔬</span> New lab case</a>
@@ -260,4 +261,5 @@
     </div>
   </div>
 @endif
+ </div>
 @endsection

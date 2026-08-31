@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 260" role="img" aria-labelledby="title desc">
+  <title id="title">DentFlow Dental Clinic Management</title>
+  <desc id="desc">DentFlow logo with green abstract tooth mark</desc>
+  <defs>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d7454"/><stop offset="1" stop-color="#1f5339"/></linearGradient>
+    <linearGradient id="shade" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#98b39a"/><stop offset="1" stop-color="#537b5c"/></linearGradient>
+  </defs>
+  <path fill="url(#leaf)" d="M72 55c38-31 91-22 119 9 27 30 30 80 9 121-15 29-34 45-48 37-13-8-14-42-26-72-13-31-36-54-63-53-18 1-27 11-27 2 0-17 9-32 36-44z"/>
+  <path fill="url(#shade)" d="M175 44c27-8 53 6 62 29 12 31 0 72-22 95 3-38-6-76-40-104-12-10-19-15 0-20z"/>
+  <path fill="url(#shade)" d="M48 112c22-17 48-11 70 10 20 20 30 47 30 70-1 18-8 42-20 44-14 2-28-17-39-37-15-27-35-43-49-51-12-7-9-26 8-36z"/>
+  <text x="285" y="142" fill="#d9e6d2" font-family="Manrope, Arial, sans-serif" font-size="88" font-weight="800" letter-spacing="-2">Dent<tspan fill="#89a75a">Flow</tspan></text>
+  <text x="290" y="190" fill="#b7c5bb" font-family="Manrope, Arial, sans-serif" font-size="22" letter-spacing="7">DENTAL CLINIC MANAGEMENT</text>
+</svg>

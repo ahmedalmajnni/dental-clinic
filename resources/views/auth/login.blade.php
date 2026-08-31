@@ -3,7 +3,7 @@
 @section('content')
 <div class="auth-split">
   <div class="auth-panel">
-    <div class="auth-mark"><img src="{{ asset('images/logo.svg') }}" alt=""> <span>Dental Clinic</span></div>
+    <div class="auth-mark"><img src="{{ asset('images/logo.svg') }}" alt="DentFlow Dental Clinic logo"></div>
     <div class="auth-quote">
       <h2>One record, from the front desk to the chair.</h2>
       <p>Appointments, treatments and billing, connected for patients, dentists and admins.</p>

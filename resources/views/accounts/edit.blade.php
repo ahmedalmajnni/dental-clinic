@@ -103,7 +103,7 @@
           @if($account->id !== auth()->id())
             <form method="POST" action="{{ route('accounts.toggle', $account) }}">
               @csrf
-              <button class="btn small secondary">{{ $account->is_active ? 'Deactivate' : 'Activate' }}</button>
+              <button class="btn small {{ $account->is_active ? 'danger' : 'edit-action' }}">{{ $account->is_active ? 'Deactivate' : 'Activate' }}</button>
             </form>
           @endif
           @if($account->employee)

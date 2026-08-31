@@ -1,5 +1,5 @@
 @extends('layouts.public')
-@section('title', 'Dental Clinic · Book an appointment')
+@section('title', 'DentFlow · Book an appointment')
 @section('content')
 
 <section class="hero">

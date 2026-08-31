@@ -10,6 +10,7 @@
   $CARE  = ['planned' => 'Planned', 'done' => 'Completed', 'cancelled' => 'Cancelled'];
 @endphp
 
+<div class="dashboard-page">
 <div class="page-head">
   <div>
     <h1>Welcome back, {{ auth()->user()->name }}</h1>
@@ -226,4 +227,5 @@
     </table>
   @endif
 </div>
+ </div>
 @endsection

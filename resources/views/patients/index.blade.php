@@ -23,10 +23,10 @@
         <td>{{ $p->phone ?: '—' }}</td>
         <td>{{ $p->email ?: '—' }}</td>
         <td class="actions">
-          <a href="{{ route('patients.edit', $p) }}" class="btn small secondary">Edit</a>
+          <a href="{{ route('patients.edit', $p) }}" class="btn small secondary edit-action">Edit</a>
           <form method="POST" action="{{ route('patients.destroy', $p) }}" onsubmit="return confirm('Archive this patient? Their history stays intact and you can restore them anytime.');">
             @csrf @method('DELETE')
-            <button class="btn small secondary">Archive</button>
+            <button class="btn small secondary archive-action">Archive</button>
           </form>
         </td>
       </tr>

@@ -65,10 +65,10 @@
         <td>{{ $a->is_active ? 'Yes' : 'No' }}</td>
         <td>{{ $a->last_login ? $a->last_login->format('d/m/Y H:i') : 'never' }}</td>
         <td class="actions">
-          <a class="btn small secondary" href="{{ route('accounts.edit', $a) }}">Edit</a>
+          <a class="btn small secondary edit-action" href="{{ route('accounts.edit', $a) }}">Edit</a>
           <form method="POST" action="{{ route('accounts.toggle', $a) }}">
             @csrf
-            <button class="btn small secondary">{{ $a->is_active ? 'Deactivate' : 'Activate' }}</button>
+            <button class="btn small {{ $a->is_active ? 'danger' : 'edit-action' }}">{{ $a->is_active ? 'Deactivate' : 'Activate' }}</button>
           </form>
         </td>
       </tr>

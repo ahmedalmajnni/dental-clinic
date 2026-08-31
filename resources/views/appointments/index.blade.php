@@ -19,7 +19,7 @@
         <td>{{ $a->branch->name }}</td>
         <td><span class="badge">{{ $a->status }}</span></td>
         <td class="actions">
-          <a href="{{ route('appointments.edit', $a) }}" class="btn small secondary">Edit</a>
+          <a href="{{ route('appointments.edit', $a) }}" class="btn small secondary edit-action">Edit</a>
           <form method="POST" action="{{ route('appointments.destroy', $a) }}" onsubmit="return confirm('Delete this appointment?');">
             @csrf @method('DELETE')
             <button class="btn small danger">Delete</button>

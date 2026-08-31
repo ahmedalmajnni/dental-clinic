@@ -19,7 +19,7 @@
         <td><span class="badge">{{ $t->status }}</span></td>
         <td>{{ $t->created_at->format('d/m/Y') }}</td>
         <td class="actions">
-          <a href="{{ route('treatments.edit', $t) }}" class="btn small secondary">Edit</a>
+          <a href="{{ route('treatments.edit', $t) }}" class="btn small secondary edit-action">Edit</a>
           <form method="POST" action="{{ route('treatments.destroy', $t) }}" onsubmit="return confirm('Delete this treatment? Its invoice line will be removed too.');">
             @csrf @method('DELETE')
             <button class="btn small danger">Delete</button>

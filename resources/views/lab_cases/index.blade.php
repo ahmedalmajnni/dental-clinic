@@ -20,7 +20,7 @@
         <td><span class="badge">{{ str_replace('_', ' ', $lc->status) }}</span></td>
         <td>${{ number_format($lc->cost, 2) }}</td>
         <td class="actions">
-          <a href="{{ route('lab-cases.edit', $lc) }}" class="btn small secondary">Edit</a>
+          <a href="{{ route('lab-cases.edit', $lc) }}" class="btn small secondary edit-action">Edit</a>
           <form method="POST" action="{{ route('lab-cases.destroy', $lc) }}" onsubmit="return confirm('Delete this lab case?');">
             @csrf @method('DELETE')
             <button class="btn small danger">Delete</button>

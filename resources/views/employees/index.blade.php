@@ -20,7 +20,7 @@
         <td>{{ $e->branch->name }}</td>
         <td>{{ $e->phone ?: '—' }}</td>
         <td class="actions">
-          <a href="{{ route('employees.edit', $e) }}" class="btn small secondary">Edit</a>
+          <a href="{{ route('employees.edit', $e) }}" class="btn small secondary edit-action">Edit</a>
           <form method="POST" action="{{ route('employees.destroy', $e) }}" onsubmit="return confirm('Delete this employee?');">
             @csrf @method('DELETE')
             <button class="btn small danger">Delete</button>

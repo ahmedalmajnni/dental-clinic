@@ -1,7 +1,9 @@
 @extends('layouts.app')
 @section('title', 'Process request')
 @section('content')
-@php($r = $appointmentRequest)
+@php
+  $r = $appointmentRequest;
+@endphp
 <div class="toolbar">
   <h1>Appointment request</h1>
   <a href="{{ route('requests.index') }}" class="btn secondary">← All requests</a>

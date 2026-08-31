@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>@yield('title', 'Dental Clinic') · Dental Clinic</title>
+  <title>@yield('title', 'DentFlow') · DentFlow</title>
+  <link rel="icon" type="image/svg+xml" href="{{ asset('images/logo.svg') }}?v=7">
   <link rel="stylesheet" href="{{ asset('css/style.css') }}?v={{ filemtime(public_path('css/style.css')) }}">
 </head>
 <body>
@@ -36,7 +37,7 @@
     @endphp
 
     <nav class="topbar">
-      <a class="brand" href="{{ route('dashboard') }}"><img src="{{ asset('images/logo.svg') }}" alt=""> <span>Dental Clinic</span></a>
+      <a class="brand" href="{{ route('dashboard') }}"><img src="{{ asset('images/logo.svg') }}" alt=""> <span>DentFlow</span></a>
 
       <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="mainnav" aria-label="Toggle menu">☰</button>
 
@@ -69,7 +70,7 @@
 
           <div class="nav-group">
             <button type="button" class="nav-trigger {{ $active === 'clinical' ? 'on' : '' }}" aria-expanded="false" aria-haspopup="true">
-              <span class="ico">🦷</span> Clinical <span class="caret" aria-hidden="true">▾</span>
+              <img class="nav-logo-icon" src="{{ asset('images/logo.svg') }}" alt=""> Clinical <span class="caret" aria-hidden="true">▾</span>
             </button>
             <div class="nav-menu" role="menu">
               <a role="menuitem" href="{{ route('treatments.index') }}">Treatments</a>
@@ -222,5 +223,26 @@
     @endif
     @yield('content')
   </main>
+  <script>
+    document.querySelectorAll('input[type="password"]').forEach(function (input) {
+      if (input.parentElement.classList.contains('password-wrap')) return;
+      var wrapper = document.createElement('div');
+      wrapper.className = 'password-wrap';
+      input.parentNode.insertBefore(wrapper, input);
+      wrapper.appendChild(input);
+
+      var label = document.createElement('label');
+      label.className = 'password-visibility';
+      var checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.setAttribute('aria-label', 'Show password');
+      checkbox.addEventListener('change', function () {
+        input.type = checkbox.checked ? 'text' : 'password';
+      });
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode(' Show password'));
+      wrapper.appendChild(label);
+    });
+  </script>
 </body>
 </html>

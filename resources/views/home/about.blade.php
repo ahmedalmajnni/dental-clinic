@@ -131,7 +131,7 @@
   <section class="section">
     <h2>How we improve the service</h2>
     <p class="section-sub">The reasons we built it this way rather than on paper.</p>
-    <div class="steps">
+    <div class="steps about-steps-grid">
       <div class="step">
         <h3>No more double-booked chairs</h3>
         <p>Because each dentist defines their own availability and taken slots disappear straight away, two patients can no longer be given the same time — the commonest cause of a wasted trip.</p>

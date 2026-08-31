@@ -20,7 +20,7 @@
         <td>{{ $m->branch->name ?? '—' }}</td>
         <td><a href="{{ $m->file_url }}" target="_blank" rel="noopener noreferrer">Open ↗</a></td>
         <td class="actions">
-          <a href="{{ route('media.edit', $m) }}" class="btn small secondary">Edit</a>
+          <a href="{{ route('media.edit', $m) }}" class="btn small secondary edit-action">Edit</a>
           <form method="POST" action="{{ route('media.destroy', $m) }}" onsubmit="return confirm('Delete this media record?');">
             @csrf @method('DELETE')
             <button class="btn small danger">Delete</button>
