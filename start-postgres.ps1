@@ -19,6 +19,6 @@ if (-not (Test-Path $Data)) {
     exit 1
 }
 
-& "$Bin\pg_ctl.exe" -D $Data -l $Log -o "-p 5432" start
+Start-Process -FilePath "$Bin\pg_ctl.exe" -ArgumentList @('-D', $Data, '-l', $Log, '-o', '-p 5432', 'start') -WindowStyle Hidden -Wait
 Start-Sleep -Seconds 2
 & "$Bin\pg_isready.exe" -h 127.0.0.1 -p 5432

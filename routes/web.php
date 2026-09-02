@@ -80,7 +80,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::delete('patients/{id}/force', [PatientController::class, 'forceDelete'])->name('patients.force-delete');
         Route::resource('patients', PatientController::class)->except('show');
         Route::resource('appointments', AppointmentController::class)->except('show');
-        Route::resource('treatments', TreatmentController::class)->except('show');
+        Route::resource('treatments', TreatmentController::class);
         Route::resource('lab-cases', LabCaseController::class)->except('show')->parameters(['lab-cases' => 'labCase']);
         Route::resource('media', MediaController::class)->except('show');
 

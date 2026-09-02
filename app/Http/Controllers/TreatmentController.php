@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\InvoiceLine;
+use App\Models\Report;
 use App\Models\Treatment;
 use App\Services\Billing;
 use Illuminate\Http\Request;
@@ -56,6 +57,17 @@ class TreatmentController extends Controller
         });
 
         return redirect()->route('treatments.index')->with('flash', ['type' => 'success', 'message' => 'Treatment saved and added to the patient invoice.']);
+    }
+
+    public function show(Treatment $treatment)
+    {
+        $treatment->load(['patient', 'appointment.patient', 'appointment.doctor', 'report']);
+
+        return view('treatments.show', [
+            'treatment' => $treatment,
+            'report' => $treatment->report,
+            'appointment' => $treatment->appointment,
+        ]);
     }
 
     public function edit(Treatment $treatment)

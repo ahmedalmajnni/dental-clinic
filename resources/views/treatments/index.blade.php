@@ -14,7 +14,7 @@
     @foreach($treatments as $t)
       <tr>
         <td>{{ $t->patient->name }}</td>
-        <td>{{ $t->procedure }}</td>
+        <td><a href="{{ route('treatments.show', $t) }}" class="link-text">{{ $t->procedure }}</a></td>
         <td>${{ number_format($t->cost, 2) }}</td>
         <td><span class="badge">{{ $t->status }}</span></td>
         <td>{{ $t->created_at->format('d/m/Y') }}</td>

@@ -24,6 +24,11 @@ class Treatment extends Model
         return $this->belongsTo(Appointment::class);
     }
 
+    public function report()
+    {
+        return $this->hasOne(Report::class, 'appointment_id', 'appointment_id');
+    }
+
     public function invoiceLine()
     {
         return $this->hasOne(InvoiceLine::class);
