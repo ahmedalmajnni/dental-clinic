@@ -79,8 +79,8 @@
         <div class="l">Dentists</div>
       </div>
       <div class="figure">
-        <div class="n">{{ number_format($stats['branches']) }}</div>
-        <div class="l">Clinics</div>
+        <div class="n">{{ number_format($stats['specialties']) }}</div>
+        <div class="l">Specialties</div>
       </div>
       <div class="figure">
         <div class="n">{{ number_format($stats['treatments']) }}</div>
@@ -142,7 +142,7 @@
       </div>
       <div class="step">
         <h3>Your history travels with you</h3>
-        <p>Records are shared across all our clinics, so being seen at a different branch — or by a different dentist — does not mean starting your history again.</p>
+        <p>Records stay with you, so seeing a different dentist or specialist does not mean starting your history again.</p>
       </div>
       <div class="step">
         <h3>Bills that add up</h3>
@@ -160,21 +160,15 @@
   </section>
 </div>
 
-@if($branches->isNotEmpty())
+@if($specialties->isNotEmpty())
   <section class="section">
-    <h2>Our clinics</h2>
-    <p class="section-sub">Choose the one nearest to you when you request an appointment.</p>
+    <h2>Our specialties</h2>
+    <p class="section-sub">Care areas available from our dental team.</p>
     <div class="tile-grid">
-      @foreach($branches as $b)
+      @foreach($specialties as $specialty)
         <div class="tile">
-          <span class="ico">📍</span>
-          <h3>{{ $b->name }}</h3>
-          <p>
-            {{ $b->address ?: 'Address given when we confirm your visit' }}
-            @if($b->phone)
-              <br>☎ {{ $b->phone }}
-            @endif
-          </p>
+          <span class="ico">🦷</span>
+          <h3>{{ $specialty->name }}</h3>
         </div>
       @endforeach
     </div>

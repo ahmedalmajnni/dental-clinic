@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Patient appointment requests. A patient asks for an appointment with a chosen
- * doctor at a chosen branch; staff then either schedule it (creating a real
+ * doctor; staff then either schedule it (creating a real
  * appointment and linking it here) or decline it. The patient sees the outcome
  * in their account.
  */
@@ -18,7 +18,6 @@ return new class extends Migration
                 id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 patient_id     UUID NOT NULL REFERENCES patient(id)  ON DELETE CASCADE,
                 doctor_id      UUID NOT NULL REFERENCES employee(id) ON DELETE RESTRICT,
-                branch_id      UUID NOT NULL REFERENCES branch(id)   ON DELETE RESTRICT,
                 preferred_date DATE,
                 note           TEXT,
                 status         VARCHAR(20) NOT NULL DEFAULT 'pending'

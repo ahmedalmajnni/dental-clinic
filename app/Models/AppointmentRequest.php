@@ -13,7 +13,7 @@ class AppointmentRequest extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'patient_id', 'doctor_id', 'branch_id', 'preferred_date', 'note',
+        'patient_id', 'doctor_id', 'preferred_date', 'preferred_time', 'note',
         'status', 'appointment_id', 'response_note', 'processed_by', 'processed_at',
     ];
 
@@ -31,11 +31,6 @@ class AppointmentRequest extends Model
     public function doctor()
     {
         return $this->belongsTo(Employee::class, 'doctor_id');
-    }
-
-    public function branch()
-    {
-        return $this->belongsTo(Branch::class);
     }
 
     public function appointment()

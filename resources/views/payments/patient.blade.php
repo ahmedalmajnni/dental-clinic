@@ -9,7 +9,7 @@
   <div class="card"><p class="muted">No payments recorded for this patient.</p></div>
 @else
 <table>
-  <thead><tr><th>Date</th><th>Method</th><th>Amount</th><th>Applied to invoices</th><th>Unused credit</th></tr></thead>
+  <thead><tr><th>Date</th><th>Method</th><th>Amount</th><th>Applied to invoices</th><th>Unused credit</th><th></th></tr></thead>
   <tbody>
     @foreach($payments as $p)
       <tr>
@@ -18,6 +18,7 @@
         <td>${{ number_format($p->amount, 2) }}</td>
         <td>${{ number_format($p->allocated, 2) }}</td>
         <td>{{ $p->unallocated > 0 ? '$' . number_format($p->unallocated, 2) : '—' }}</td>
+        <td><a href="{{ route('payments.edit', $p) }}" class="btn small secondary">Edit</a></td>
       </tr>
     @endforeach
   </tbody>

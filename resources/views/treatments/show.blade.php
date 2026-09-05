@@ -51,7 +51,6 @@
   <h2 style="margin-top:0; font-size:1.1rem;">Visit details</h2>
   <dl style="margin:0; display:grid; gap:10px;">
     <div><dt class="muted" style="display:inline-block; min-width:120px;">Doctor</dt><dd style="display:inline; margin:0;">{{ $appointment?->doctor?->name ?? '—' }}</dd></div>
-    <div><dt class="muted" style="display:inline-block; min-width:120px;">Branch</dt><dd style="display:inline; margin:0;">{{ $appointment?->branch?->name ?? '—' }}</dd></div>
   </dl>
 </div>
 @endsection

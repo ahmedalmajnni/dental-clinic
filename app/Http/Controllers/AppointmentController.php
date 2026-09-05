@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
-use App\Models\Branch;
 use App\Models\Employee;
+use App\Models\InvoiceLine;
 use App\Models\Patient;
 use App\Models\Report;
+use App\Models\Treatment;
 use App\Services\AvailabilityService;
+use App\Services\Billing;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AppointmentController extends Controller
 {
@@ -45,8 +48,9 @@ class AppointmentController extends Controller
 
         return [
             'patients' => Patient::orderBy('name')->get(),
-            'doctors' => $restricted ? collect([Auth::user()->employee]) : Employee::orderBy('name')->get(),
-            'branches' => Branch::orderBy('name')->get(),
+            'doctors' => $restricted
+                ? collect([Auth::user()->employee])
+                : Employee::where('job_title', 'doctor')->orderBy('name')->get(),
             'statuses' => self::STATUSES,
         ];
     }
@@ -54,12 +58,25 @@ class AppointmentController extends Controller
     public function index()
     {
         $restricted = $this->isRestrictedDoctor();
+        $status = in_array(request()->query('status'), ['completed', 'cancelled'], true)
+            ? request()->query('status')
+            : 'booked';
 
-        $appointments = Appointment::with(['patient', 'doctor', 'branch'])
+        $appointments = Appointment::with(['patient', 'doctor'])
             ->when($restricted, fn ($q) => $q->where('doctor_id', Auth::user()->employee_id))
+            ->where('status', $status)
             ->orderByDesc('scheduled_at')->get();
 
-        return view('appointments.index', ['appointments' => $appointments, 'showDoctor' => ! $restricted]);
+        $scope = fn ($query) => $query->when($restricted, fn ($q) => $q->where('doctor_id', Auth::user()->employee_id));
+
+        return view('appointments.index', [
+            'appointments' => $appointments,
+            'showDoctor' => ! $restricted,
+            'status' => $status,
+            'bookedCount' => $scope(Appointment::query())->where('status', 'booked')->count(),
+            'completedCount' => $scope(Appointment::query())->where('status', 'completed')->count(),
+            'cancelledCount' => $scope(Appointment::query())->where('status', 'cancelled')->count(),
+        ]);
     }
 
     public function create()
@@ -89,6 +106,7 @@ class AppointmentController extends Controller
         }
         $appointment = Appointment::create($data);
         $this->syncNotes($appointment, $request);
+        $this->createNextVisit($appointment, $request);
 
         return redirect()->route('appointments.index')->with('flash', ['type' => 'success', 'message' => 'Appointment booked.']);
     }
@@ -116,6 +134,7 @@ class AppointmentController extends Controller
         }
         $appointment->update($data);
         $this->syncNotes($appointment, $request);
+        $this->createNextVisit($appointment, $request);
 
         return redirect()->route('appointments.index')->with('flash', ['type' => 'success', 'message' => 'Appointment updated.']);
     }
@@ -140,7 +159,7 @@ class AppointmentController extends Controller
             return null;
         }
 
-        $doctor = Employee::find($data['doctor_id']);
+        $doctor = Employee::whereKey($data['doctor_id'])->where('job_title', 'doctor')->first();
         if (! $doctor || ! $doctor->isDoctor() || ! $availability->hasAnyAvailability($doctor)) {
             return null;
         }
@@ -172,10 +191,11 @@ class AppointmentController extends Controller
      */
     private function syncNotes(Appointment $appointment, Request $request): void
     {
+        $nextVisit = $this->nextVisitAt($request);
         $fields = [
             'diagnosis' => $request->input('diagnosis') ?: null,
             'notes' => $request->input('notes') ?: null,
-            'next_visit' => $request->input('next_visit') ?: null,
+            'next_visit' => $nextVisit?->toDateString(),
         ];
         $report = Report::where('appointment_id', $appointment->id)->first();
 
@@ -194,12 +214,67 @@ class AppointmentController extends Controller
         $report ? $report->update($fields) : Report::create($fields);
     }
 
+    private function createNextVisit(Appointment $appointment, Request $request): void
+    {
+        $nextVisit = $this->nextVisitAt($request);
+        if (! $nextVisit) {
+            return;
+        }
+
+        Appointment::firstOrCreate([
+            'patient_id' => $appointment->patient_id,
+            'doctor_id' => $appointment->doctor_id,
+            'scheduled_at' => $nextVisit,
+        ], [
+            'status' => 'booked',
+        ]);
+    }
+
+    private function nextVisitAt(Request $request): ?Carbon
+    {
+        $value = (string) $request->input('next_visit');
+        if (! str_contains($value, '|')) {
+            return null;
+        }
+
+        [$date, $time] = explode('|', $value, 2);
+        try {
+            return Carbon::createFromFormat('Y-m-d H:i', $date.' '.$time);
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
     public function destroy(Appointment $appointment)
     {
         $this->ensureCanHandle($appointment);
-        $appointment->delete();
+        $appointment->update(['status' => 'cancelled']);
 
-        return redirect()->route('appointments.index')->with('flash', ['type' => 'success', 'message' => 'Appointment deleted.']);
+        return redirect()->route('appointments.index', ['status' => 'cancelled'])
+            ->with('flash', ['type' => 'success', 'message' => 'Appointment archived.']);
+    }
+
+    public function forceDelete(Appointment $appointment)
+    {
+        $this->ensureCanHandle($appointment);
+
+        DB::transaction(function () use ($appointment) {
+            $treatmentIds = Treatment::where('appointment_id', $appointment->id)->pluck('id');
+            $invoiceIds = InvoiceLine::whereIn('treatment_id', $treatmentIds)
+                ->pluck('invoice_id')->unique();
+
+            InvoiceLine::whereIn('treatment_id', $treatmentIds)->delete();
+            Treatment::whereIn('id', $treatmentIds)->delete();
+            Report::where('appointment_id', $appointment->id)->delete();
+            $appointment->delete();
+
+            foreach ($invoiceIds as $invoiceId) {
+                Billing::recalcInvoice($invoiceId);
+            }
+        });
+
+        return redirect()->route('appointments.index', ['status' => 'cancelled'])
+            ->with('flash', ['type' => 'success', 'message' => 'Appointment permanently deleted.']);
     }
 
     private function data(Request $request): array
@@ -207,7 +282,6 @@ class AppointmentController extends Controller
         return [
             'patient_id' => $request->input('patient_id'),
             'doctor_id' => $request->input('doctor_id'),
-            'branch_id' => $request->input('branch_id'),
             'scheduled_at' => $request->input('scheduled_at'),
             'status' => $request->input('status') ?: 'booked',
         ];

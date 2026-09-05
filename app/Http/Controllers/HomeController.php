@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Branch;
 use App\Models\Employee;
+use App\Models\Specialty;
 use App\Models\Patient;
 use App\Models\Treatment;
 use Illuminate\Support\Facades\Auth;
@@ -24,9 +24,9 @@ class HomeController extends Controller
             return redirect()->route('dashboard');
         }
 
-        $branches = rescue(fn () => Branch::where('type', 'clinic')->orderBy('name')->get(), collect(), false);
+        $specialties = rescue(fn () => Specialty::orderBy('name')->get(), collect(), false);
 
-        $doctors = rescue(fn () => Employee::with('branch')
+        $doctors = rescue(fn () => Employee::query()
             ->where('job_title', 'doctor')
             ->orderBy('name')
             ->get(), collect(), false);
@@ -37,7 +37,7 @@ class HomeController extends Controller
         // here, so it always describes this clinic rather than a generic menu.
         $services = $this->services();
 
-        return view('home.landing', compact('branches', 'doctors', 'stats', 'services'));
+        return view('home.landing', compact('specialties', 'doctors', 'stats', 'services'));
     }
 
     /**
@@ -49,7 +49,7 @@ class HomeController extends Controller
         return view('home.about', [
             'stats' => $this->stats(),
             'services' => $this->services(),
-            'branches' => rescue(fn () => Branch::where('type', 'clinic')->orderBy('name')->get(), collect(), false),
+            'specialties' => rescue(fn () => Specialty::orderBy('name')->get(), collect(), false),
         ]);
     }
 
@@ -59,9 +59,9 @@ class HomeController extends Controller
         return rescue(fn () => [
             'patients' => Patient::count(),
             'doctors' => Employee::where('job_title', 'doctor')->count(),
-            'branches' => Branch::where('type', 'clinic')->count(),
+            'specialties' => Specialty::count(),
             'treatments' => Treatment::where('status', 'done')->count(),
-        ], ['patients' => 0, 'doctors' => 0, 'branches' => 0, 'treatments' => 0], false);
+        ], ['patients' => 0, 'doctors' => 0, 'specialties' => 0, 'treatments' => 0], false);
     }
 
     /** The procedures we most often perform, most common first. */

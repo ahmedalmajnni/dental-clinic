@@ -5,17 +5,17 @@
   <h1>Appointment requests</h1>
 </div>
 @if($requests->isEmpty())
-  <div class="card"><p class="muted">No appointment requests yet.</p></div>
+  <div class="card"><p class="muted">No pending appointment requests.</p></div>
 @else
 <table>
-  <thead><tr><th>Requested</th><th>Patient</th><th>Doctor</th><th>Branch</th><th>Preferred</th><th>Status</th><th></th></tr></thead>
+  <thead><tr><th>Requested</th><th>Patient</th><th>Doctor</th><th>Specialty</th><th>Preferred</th><th>Status</th><th></th></tr></thead>
   <tbody>
     @foreach($requests as $r)
       <tr>
         <td>{{ $r->created_at->format('d/m/Y') }}</td>
         <td>{{ $r->patient->name }}</td>
         <td>{{ $r->doctor->name }}</td>
-        <td>{{ $r->branch->name }}</td>
+        <td>{{ $r->doctor?->specialty ?? '—' }}</td>
         <td>{{ $r->preferred_date ? $r->preferred_date->format('d/m/Y') : '—' }}</td>
         <td><span class="badge reqstat-{{ $r->status }}">{{ $r->status }}</span></td>
         <td class="actions">

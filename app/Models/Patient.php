@@ -26,6 +26,11 @@ class Patient extends Model
         return $this->hasMany(Treatment::class);
     }
 
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
+    }
+
     public function invoices()
     {
         return $this->hasMany(Invoice::class);
@@ -34,6 +39,16 @@ class Patient extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function labCases()
+    {
+        return $this->hasMany(LabCase::class);
+    }
+
+    public function media()
+    {
+        return $this->hasMany(Media::class);
     }
 
     public function appointmentRequests()

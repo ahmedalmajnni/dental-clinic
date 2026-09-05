@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\AppointmentRequest;
-use App\Models\Branch;
 use App\Models\Employee;
 use App\Services\AvailabilityService;
 use Carbon\Carbon;
@@ -21,25 +20,57 @@ class AppointmentRequestController extends Controller
     public function create()
     {
         return view('appointment_requests.create', [
-            'doctors' => Employee::with('branch')->where('job_title', 'doctor')->orderBy('name')->get(),
+            'doctors' => Employee::where('job_title', 'doctor')->orderBy('name')->get(),
         ]);
     }
 
-    public function store(Request $request)
+    public function slots(Request $request, AvailabilityService $availability)
     {
-        // The branch is the doctor's own specialty/clinic — taken from the chosen
-        // doctor, never picked separately, so a cosmetic doctor can never be
-        // paired with the surgery branch, etc.
-        $doctor = Employee::find($request->input('doctor_id'));
+        $doctor = Employee::whereKey($request->query('doctor_id'))
+            ->where('job_title', 'doctor')->first();
+        if (! $doctor) {
+            return response()->json(['slots' => []]);
+        }
+
+        $slots = [];
+        foreach ($availability->slotsForRange($doctor, now()->startOfDay(), now()->addDays(60)) as $date => $daySlots) {
+            foreach ($daySlots as $slot) {
+                $slots[] = ['date' => $date, 'time' => $slot->format('H:i')];
+            }
+        }
+
+        return response()->json(['slots' => $slots]);
+    }
+
+    public function store(Request $request, AvailabilityService $availability)
+    {
+        $doctor = Employee::whereKey($request->input('doctor_id'))
+            ->where('job_title', 'doctor')
+            ->first();
         if (! $doctor) {
             return back()->withInput()->with('flash', ['type' => 'error', 'message' => 'Please choose a doctor.']);
+        }
+
+        $requested = explode('|', (string) $request->input('preferred_slot'), 2);
+        $preferredDate = $requested[0] ?? '';
+        $preferredTime = $requested[1] ?? '';
+        if ($preferredDate === '' || $preferredTime === '') {
+            return back()->withInput()->with('flash', ['type' => 'error', 'message' => 'Please choose an available time.']);
+        }
+        try {
+            $when = Carbon::createFromFormat('Y-m-d H:i', $preferredDate.' '.$preferredTime);
+        } catch (\Throwable $e) {
+            $when = null;
+        }
+        if (! $when || $availability->hasAnyAvailability($doctor) && ! $availability->isBookable($doctor, $when)) {
+            return back()->withInput()->with('flash', ['type' => 'error', 'message' => 'Please choose an available time.']);
         }
 
         AppointmentRequest::create([
             'patient_id' => Auth::user()->patient_id,
             'doctor_id' => $doctor->id,
-            'branch_id' => $doctor->branch_id,
-            'preferred_date' => $request->input('preferred_date') ?: null,
+            'preferred_date' => $preferredDate,
+            'preferred_time' => $preferredTime,
             'note' => $request->input('note') ?: null,
             'status' => 'pending',
         ]);
@@ -49,7 +80,7 @@ class AppointmentRequestController extends Controller
 
     public function mine()
     {
-        $requests = AppointmentRequest::with(['doctor', 'branch', 'appointment'])
+        $requests = AppointmentRequest::with(['doctor', 'appointment'])
             ->where('patient_id', Auth::user()->patient_id)
             ->orderByDesc('created_at')->get();
 
@@ -58,10 +89,16 @@ class AppointmentRequestController extends Controller
 
     public function cancel(AppointmentRequest $appointmentRequest)
     {
-        // A patient may only cancel their own, still-pending request.
+        // A patient may only cancel their own request. A scheduled request's
+        // linked appointment must be cancelled as well.
         abort_unless($appointmentRequest->patient_id === Auth::user()->patient_id, 403);
-        if ($appointmentRequest->status === 'pending') {
+        if (in_array($appointmentRequest->status, ['pending', 'scheduled'], true)) {
+            DB::transaction(function () use ($appointmentRequest) {
+                if ($appointmentRequest->appointment) {
+                    $appointmentRequest->appointment->update(['status' => 'cancelled']);
+                }
             $appointmentRequest->update(['status' => 'cancelled']);
+            });
         }
 
         return redirect()->route('my-requests')->with('flash', ['type' => 'success', 'message' => 'Request cancelled.']);
@@ -86,8 +123,8 @@ class AppointmentRequestController extends Controller
     public function queue()
     {
         $user = Auth::user();
-        $query = AppointmentRequest::with(['patient', 'doctor', 'branch'])
-            ->orderByRaw("status = 'pending' DESC")   // pending first
+        $query = AppointmentRequest::with(['patient', 'doctor'])
+            ->where('status', 'pending')
             ->orderByDesc('created_at');
 
         // Admin and reception see every request; a doctor sees only their own.
@@ -101,7 +138,7 @@ class AppointmentRequestController extends Controller
     public function process(AppointmentRequest $appointmentRequest, AvailabilityService $availability)
     {
         $this->ensureCanHandle($appointmentRequest);
-        $appointmentRequest->load(['patient', 'doctor', 'branch', 'appointment']);
+        $appointmentRequest->load(['patient', 'doctor', 'appointment']);
 
         // Two months is far enough ahead for a routine booking without turning the
         // dropdown into a wall of dates.
@@ -140,7 +177,6 @@ class AppointmentRequestController extends Controller
             $appointment = Appointment::create([
                 'patient_id' => $appointmentRequest->patient_id,
                 'doctor_id' => $appointmentRequest->doctor_id,
-                'branch_id' => $appointmentRequest->branch_id,
                 'scheduled_at' => $request->input('scheduled_at'),
                 'status' => 'booked',
             ]);
@@ -160,12 +196,17 @@ class AppointmentRequestController extends Controller
     public function decline(Request $request, AppointmentRequest $appointmentRequest)
     {
         $this->ensureCanHandle($appointmentRequest);
-        $appointmentRequest->update([
-            'status' => 'declined',
-            'response_note' => $request->input('response_note') ?: null,
-            'processed_by' => Auth::user()->employee_id,
-            'processed_at' => now(),
-        ]);
+        DB::transaction(function () use ($request, $appointmentRequest) {
+            if ($appointmentRequest->appointment) {
+                $appointmentRequest->appointment->update(['status' => 'cancelled']);
+            }
+            $appointmentRequest->update([
+                'status' => 'declined',
+                'response_note' => $request->input('response_note') ?: null,
+                'processed_by' => Auth::user()->employee_id,
+                'processed_at' => now(),
+            ]);
+        });
 
         return redirect()->route('requests.index')->with('flash', ['type' => 'success', 'message' => 'Request declined — the patient will see your note.']);
     }

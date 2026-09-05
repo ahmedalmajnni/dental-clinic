@@ -16,7 +16,10 @@ class TreatmentController extends Controller
 
     private function appointmentOptions()
     {
-        return Appointment::with('patient')->orderByDesc('scheduled_at')->get();
+        return Appointment::with('patient')
+            ->where('status', 'completed')
+            ->orderByDesc('scheduled_at')
+            ->get();
     }
 
     public function index()
@@ -38,7 +41,15 @@ class TreatmentController extends Controller
     // transaction, then refreshes the invoice totals.
     public function store(Request $request)
     {
-        $appt = Appointment::findOrFail($request->input('appointment_id'));
+        $appt = Appointment::whereKey($request->input('appointment_id'))
+            ->where('status', 'completed')
+            ->first();
+        if (! $appt) {
+            return back()->withInput()->with('flash', [
+                'type' => 'error',
+                'message' => 'Please choose a completed appointment.',
+            ]);
+        }
         $procedure = $request->input('procedure');
         $amount = (float) ($request->input('cost') ?: 0);
         $status = $request->input('status') ?: 'planned';

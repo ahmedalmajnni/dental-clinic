@@ -25,15 +25,17 @@
         <option value="{{ $j }}" @selected(old('job_title') === $j)>{{ ucfirst(str_replace('_', ' ', $j)) }}</option>
       @endforeach
     </select>
-    <p class="muted">An <strong>admin</strong> can manage branches, employees and accounts. Everyone else is staff.</p>
+    <p class="muted">An <strong>admin</strong> can manage specialties, employees and accounts. Everyone else is staff.</p>
 
-    <label for="branch_id">Branch</label>
-    <select id="branch_id" name="branch_id" required>
-      <option value="">— choose branch —</option>
-      @foreach($branches as $b)
-        <option value="{{ $b->id }}" @selected(old('branch_id') === $b->id)>{{ $b->name }}</option>
-      @endforeach
-    </select>
+    <div id="specialty-field">
+      <label for="specialty">Specialty</label>
+      <select id="specialty" name="specialty">
+        <option value="">— choose specialty —</option>
+        @foreach($specialties as $specialty)
+          <option value="{{ $specialty->name }}" @selected(old('specialty') === $specialty->name)>{{ $specialty->name }}</option>
+        @endforeach
+      </select>
+    </div>
 
     <label for="phone">Phone (optional)</label>
     <input type="text" id="phone" name="phone" value="{{ old('phone') }}">
@@ -53,4 +55,19 @@
     </div>
   </form>
 </div>
+<script>
+  var jobTitleField = document.getElementById('job_title');
+  var specialtyField = document.getElementById('specialty-field');
+  var specialtySelect = document.getElementById('specialty');
+
+  function updateSpecialtyVisibility() {
+    var isDoctor = jobTitleField.value === 'doctor';
+    specialtyField.hidden = !isDoctor;
+    specialtySelect.disabled = !isDoctor;
+    if (!isDoctor) specialtySelect.value = '';
+  }
+
+  jobTitleField.addEventListener('change', updateSpecialtyVisibility);
+  updateSpecialtyVisibility();
+</script>
 @endsection

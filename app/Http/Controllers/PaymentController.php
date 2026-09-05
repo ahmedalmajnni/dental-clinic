@@ -53,7 +53,16 @@ class PaymentController extends Controller
     public function create()
     {
         return view('payments.form', [
-            'patients' => $this->patientsWithBalance(), 'methods' => self::METHODS, 'form' => [],
+            'patients' => $this->patientsWithBalance(), 'methods' => self::METHODS,
+            'payment' => null, 'action' => route('payments.store'), 'method' => 'POST',
+        ]);
+    }
+
+    public function edit(Payment $payment)
+    {
+        return view('payments.form', [
+            'patients' => collect(), 'methods' => self::METHODS,
+            'payment' => $payment, 'action' => route('payments.update', $payment), 'method' => 'PUT',
         ]);
     }
 
@@ -82,6 +91,33 @@ class PaymentController extends Controller
         }
 
         return redirect()->route('payments.index')->with('flash', ['type' => 'success', 'message' => $msg]);
+    }
+
+    public function update(Request $request, Payment $payment)
+    {
+        $amount = (float) $request->input('amount');
+        if ($amount <= 0) {
+            return back()->withInput()->with('flash', ['type' => 'error', 'message' => 'Enter an amount greater than zero.']);
+        }
+
+        DB::transaction(function () use ($request, $payment, $amount) {
+            $invoiceIds = PaymentAllocation::where('payment_id', $payment->id)
+                ->pluck('invoice_id')->unique();
+            PaymentAllocation::where('payment_id', $payment->id)->delete();
+            $payment->update([
+                'amount' => $amount,
+                'method' => $request->input('method') ?: 'cash',
+                'paid_at' => $request->input('paid_at') ?: $payment->paid_at,
+            ]);
+
+            foreach ($invoiceIds as $invoiceId) {
+                Billing::recalcInvoice($invoiceId);
+            }
+            Billing::autoAllocate($payment->id, $payment->patient_id);
+        });
+
+        return redirect()->route('payments.patient', $payment->patient_id)
+            ->with('flash', ['type' => 'success', 'message' => 'Payment updated and invoice balances recalculated.']);
     }
 
     private function patientsWithBalance()

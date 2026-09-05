@@ -11,7 +11,7 @@ class InvoiceLine extends Model
 
     protected $table = 'invoice_line';
     public $timestamps = false; // this table has no created_at at all
-    protected $fillable = ['invoice_id', 'treatment_id', 'description', 'amount'];
+    protected $fillable = ['invoice_id', 'treatment_id', 'lab_case_id', 'media_id', 'description', 'amount'];
     protected $casts = ['amount' => 'decimal:2'];
 
     public function invoice()
@@ -22,5 +22,15 @@ class InvoiceLine extends Model
     public function treatment()
     {
         return $this->belongsTo(Treatment::class);
+    }
+
+    public function labCase()
+    {
+        return $this->belongsTo(LabCase::class);
+    }
+
+    public function media()
+    {
+        return $this->belongsTo(Media::class);
     }
 }

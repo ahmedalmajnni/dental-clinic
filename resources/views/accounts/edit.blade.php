@@ -90,7 +90,7 @@
             <tr><th>Role</th><td>{{ $account->role }}</td></tr>
             @if(! $isPatient)
               <tr><th>Job title</th><td>{{ str_replace('_', ' ', $job ?: '—') }}</td></tr>
-              <tr><th>Branch</th><td>{{ $account->employee?->branch?->name ?? '—' }}</td></tr>
+              <tr><th>Specialty</th><td>{{ $account->employee?->specialty ?? '—' }}</td></tr>
             @endif
             <tr><th>Created</th><td>{{ $account->created_at?->format('d/m/Y') ?? '—' }}</td></tr>
             <tr><th>Last login</th><td>{{ $account->last_login?->format('d/m/Y H:i') ?? 'never' }}</td></tr>
@@ -107,7 +107,7 @@
             </form>
           @endif
           @if($account->employee)
-            <a class="btn small secondary" href="{{ route('employees.edit', $account->employee) }}">Job title &amp; branch</a>
+            <a class="btn small secondary" href="{{ route('employees.edit', $account->employee) }}">Job title &amp; specialty</a>
           @endif
         </div>
         @if($account->id === auth()->id())

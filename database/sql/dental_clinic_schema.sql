@@ -14,32 +14,16 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";   -- provides gen_random_uuid()
 
 -- ----------------------------------------------------------------------------
--- 1. BRANCH  — each clinic location, and optionally the photo studio
--- ----------------------------------------------------------------------------
-CREATE TABLE branch (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name        VARCHAR(120) NOT NULL,
-    type        VARCHAR(20)  NOT NULL DEFAULT 'clinic'
-                    CHECK (type IN ('clinic', 'studio')),
-    phone       VARCHAR(30),
-    address     VARCHAR(255),
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
-);
-COMMENT ON TABLE branch IS 'Each clinic location (and optional photo studio).';
-
--- ----------------------------------------------------------------------------
--- 2. EMPLOYEE  — all staff: admin, doctor, reception, lab technician
+-- 1. EMPLOYEE  — all staff: admin, doctor, reception, lab technician
 -- ----------------------------------------------------------------------------
 CREATE TABLE employee (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    branch_id   UUID NOT NULL REFERENCES branch(id) ON DELETE RESTRICT,
     name        VARCHAR(120) NOT NULL,
     job_title   VARCHAR(30)  NOT NULL
                     CHECK (job_title IN ('admin', 'doctor', 'reception', 'lab_tech')),
     phone       VARCHAR(30),
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
-CREATE INDEX idx_employee_branch ON employee(branch_id);
 COMMENT ON TABLE employee IS 'All staff. job_title describes the job; account.role controls access.';
 
 -- ----------------------------------------------------------------------------
@@ -53,7 +37,7 @@ CREATE TABLE patient (
     email       VARCHAR(160),
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
-COMMENT ON TABLE patient IS 'Patient records, shared across all branches.';
+COMMENT ON TABLE patient IS 'Patient records shared across the dental clinic.';
 
 -- ----------------------------------------------------------------------------
 -- 4. ACCOUNT  — login for everyone (admin / employee / patient)
@@ -87,7 +71,6 @@ CREATE TABLE appointment (
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     patient_id    UUID NOT NULL REFERENCES patient(id)  ON DELETE RESTRICT,
     doctor_id     UUID NOT NULL REFERENCES employee(id) ON DELETE RESTRICT,
-    branch_id     UUID NOT NULL REFERENCES branch(id)   ON DELETE RESTRICT,
     scheduled_at  TIMESTAMPTZ NOT NULL,
     status        VARCHAR(20) NOT NULL DEFAULT 'booked'
                       CHECK (status IN ('booked', 'completed', 'cancelled', 'no_show')),
@@ -95,7 +78,6 @@ CREATE TABLE appointment (
 );
 CREATE INDEX idx_appt_patient  ON appointment(patient_id);
 CREATE INDEX idx_appt_doctor   ON appointment(doctor_id);
-CREATE INDEX idx_appt_branch   ON appointment(branch_id);
 CREATE INDEX idx_appt_schedule ON appointment(scheduled_at);
 COMMENT ON TABLE appointment IS 'One scheduled visit; drives the calendar.';
 
@@ -215,7 +197,6 @@ COMMENT ON TABLE lab_case IS 'Lab work tracked from order to delivery; updated b
 CREATE TABLE media (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     patient_id  UUID NOT NULL REFERENCES patient(id) ON DELETE RESTRICT,
-    branch_id   UUID REFERENCES branch(id) ON DELETE SET NULL,   -- where it was taken (clinic/studio)
     type        VARCHAR(20) NOT NULL
                     CHECK (type IN ('xray', 'scan', 'photo')),
     category    VARCHAR(40),                                     -- e.g. before / after / intraoral
@@ -224,7 +205,6 @@ CREATE TABLE media (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_media_patient ON media(patient_id);
-CREATE INDEX idx_media_branch  ON media(branch_id);
 COMMENT ON TABLE media IS 'X-rays, scans and photos; the file is in storage, the link is here.';
 
 -- ============================================================================

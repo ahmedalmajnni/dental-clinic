@@ -12,7 +12,7 @@
 <div class="card">
   <p><strong>Patient:</strong> {{ $r->patient->name }}@if($r->patient->phone) · {{ $r->patient->phone }}@endif</p>
   <p><strong>Doctor:</strong> {{ $r->doctor->name }}</p>
-  <p><strong>Branch:</strong> {{ $r->branch->name }}</p>
+  <p><strong>Specialty:</strong> {{ $r->doctor?->specialty ?? '—' }}</p>
   <p><strong>Preferred date:</strong> {{ $r->preferred_date ? $r->preferred_date->format('d/m/Y') : '—' }}</p>
   <p><strong>Patient note:</strong> {{ $r->note ?: '—' }}</p>
   <p><strong>Status:</strong> <span class="badge reqstat-{{ $r->status }}">{{ $r->status }}</span></p>

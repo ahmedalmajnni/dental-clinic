@@ -3,7 +3,6 @@
 @section('content')
 <div class="toolbar">
   <h1>Payments by patient</h1>
-  <a href="{{ route('payments.create') }}" class="btn">+ Record a payment</a>
 </div>
 @if($patients->isEmpty())
   <div class="card"><p class="muted">No payments recorded yet.</p></div>

@@ -22,7 +22,7 @@ return new class extends Migration
         DB::unprepared(
             'DROP TABLE IF EXISTS media, lab_case, payment_allocation, payment, '
             . 'invoice_line, invoice, treatment, report, appointment, account, '
-            . 'patient, employee, branch CASCADE;'
+            . 'patient, employee CASCADE;'
         );
     }
 };

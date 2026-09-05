@@ -20,6 +20,13 @@
     <label for="email">Email</label>
     <input type="email" id="email" name="email" value="{{ old('email', $patient->email) }}">
 
+    @if($isEdit && $patient->account)
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" minlength="6" autocomplete="new-password"
+             placeholder="Leave blank to keep the current password">
+      <p class="muted">Enter a new password only if you want to change it.</p>
+    @endif
+
     <div class="actions" style="margin-top:18px;">
       <button type="submit" class="btn">Save</button>
       <a href="{{ route('patients.index') }}" class="btn secondary">Cancel</a>
