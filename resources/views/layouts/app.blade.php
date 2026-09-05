@@ -22,6 +22,7 @@
         'patients' => ['patients.'],
         'appointments' => ['appointments.', 'requests.', 'availability.'],
         'clinical' => ['treatments.', 'lab-cases.', 'media.'],
+        'billing' => ['invoices.', 'payments.'],
         'admin' => ['specialties.', 'employees.', 'accounts.'],
       ];
       $active = '';
@@ -75,6 +76,17 @@
               <a role="menuitem" href="{{ route('treatments.index') }}">Treatments</a>
               <a role="menuitem" href="{{ route('lab-cases.index') }}">Lab cases</a>
               <a role="menuitem" href="{{ route('media.index') }}">Media</a>
+            </div>
+          </div>
+
+          <div class="nav-group">
+            <button type="button" class="nav-trigger {{ $active === 'billing' ? 'on' : '' }}" aria-expanded="false" aria-haspopup="true">
+              <span class="ico">$</span> Billing <span class="caret" aria-hidden="true">▾</span>
+            </button>
+            <div class="nav-menu" role="menu">
+              <a role="menuitem" href="{{ route('invoices.index') }}">Invoices</a>
+              <a role="menuitem" href="{{ route('payments.index') }}">Payments</a>
+              <a role="menuitem" href="{{ route('payments.create') }}">Record payment</a>
             </div>
           </div>
 
