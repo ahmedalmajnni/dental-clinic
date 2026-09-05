@@ -3,14 +3,14 @@
 namespace Database\Seeders;
 
 use App\Models\Account;
-use App\Models\Branch;
 use App\Models\Employee;
+use App\Models\Specialty;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Creates the first admin login (with a default branch + admin employee, since
+ * Creates the first admin login (with a default specialty + admin employee, since
  * every account must attach to an employee). Idempotent: run it as often as you
  * like. The PHP equivalent of the Node app's scripts/seed-admin.js.
  *
@@ -30,13 +30,11 @@ class AdminSeeder extends Seeder
         }
 
         DB::transaction(function () use ($email, $password) {
-            $branch = Branch::first() ?? Branch::create([
-                'name' => env('BRANCH_NAME', 'Main Clinic'), 'type' => 'clinic',
-            ]);
+            $specialty = Specialty::first() ?? Specialty::create(['name' => 'General dentistry']);
             $employee = Employee::create([
-                'branch_id' => $branch->id,
                 'name' => env('ADMIN_NAME', 'Clinic Admin'),
                 'job_title' => 'admin',
+                'specialty' => $specialty->name,
             ]);
             Account::create([
                 'email' => $email,

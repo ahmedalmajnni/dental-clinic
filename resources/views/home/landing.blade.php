@@ -29,8 +29,8 @@
       <div class="l">Dentists</div>
     </div>
     <div class="figure">
-      <div class="n">{{ number_format($stats['branches']) }}</div>
-      <div class="l">Clinics</div>
+      <div class="n">{{ number_format($stats['specialties']) }}</div>
+      <div class="l">Specialties</div>
     </div>
     <div class="figure">
       <div class="n">{{ number_format($stats['treatments']) }}</div>
@@ -95,7 +95,7 @@
     </div>
     <div class="step">
       <h3>Request an appointment</h3>
-      <p>Pick the dentist and the clinic you want to be seen at, say when suits you, and add a note about what is bothering you.</p>
+      <p>Pick the dentist and specialty you need, say when suits you, and add a note about what is bothering you.</p>
     </div>
     <div class="step">
       <h3>We confirm your time</h3>
@@ -103,30 +103,6 @@
     </div>
   </div>
 </section>
-
-{{-- Clinics and dentists are real records: drop the whole section rather than show an empty grid. --}}
-@if($branches->isNotEmpty())
-  <div class="section-band">
-    <section class="section">
-      <h2>Our clinics</h2>
-      <p class="section-sub">Choose the one nearest to you when you request your appointment.</p>
-      <div class="tile-grid">
-        @foreach($branches as $b)
-          <div class="tile">
-            <span class="ico">📍</span>
-            <h3>{{ $b->name }}</h3>
-            <p>
-              {{ $b->address ?: 'Address given when we confirm your visit' }}
-              @if($b->phone)
-                <br>☎ {{ $b->phone }}
-              @endif
-            </p>
-          </div>
-        @endforeach
-      </div>
-    </section>
-  </div>
-@endif
 
 @if($doctors->isNotEmpty())
   <section class="section">
@@ -137,7 +113,7 @@
         <div class="tile">
           <span class="ico">🧑‍⚕️</span>
           <h3>{{ $d->name }}</h3>
-          <p>Dentist{{ $d->branch?->name ? " · ".$d->branch->name : "" }}</p>
+          <p>Dentist<br><strong>Specialty:</strong> {{ $d->specialty ?: 'Not specified' }}</p>
         </div>
       @endforeach
     </div>

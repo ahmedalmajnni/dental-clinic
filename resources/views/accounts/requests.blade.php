@@ -18,7 +18,7 @@
   <div class="card"><p class="muted">No pending staff requests.</p></div>
 @else
 <table>
-  <thead><tr><th>Requested</th><th>Name</th><th>Email</th><th>Job title</th><th>Branch</th><th></th></tr></thead>
+  <thead><tr><th>Requested</th><th>Name</th><th>Email</th><th>Job title</th><th>Specialty</th><th></th></tr></thead>
   <tbody>
     @foreach($pending as $a)
       <tr>
@@ -26,7 +26,7 @@
         <td>{{ $a->employee->name ?? '—' }}</td>
         <td>{{ $a->email }}</td>
         <td><span class="badge">{{ $a->employee->job_title ?? '—' }}</span></td>
-        <td>{{ $a->employee->branch->name ?? '—' }}</td>
+        <td>{{ $a->employee->specialty ?? '—' }}</td>
         <td class="actions">
           <form method="POST" action="{{ route('accounts.approve', $a) }}">
             @csrf

@@ -22,8 +22,7 @@
         'patients' => ['patients.'],
         'appointments' => ['appointments.', 'requests.', 'availability.'],
         'clinical' => ['treatments.', 'lab-cases.', 'media.'],
-        'billing' => ['invoices.', 'payments.'],
-        'admin' => ['branches.', 'employees.', 'accounts.'],
+        'admin' => ['specialties.', 'employees.', 'accounts.'],
       ];
       $active = '';
       foreach ($sections as $key => $prefixes) {
@@ -79,15 +78,6 @@
             </div>
           </div>
 
-          <div class="nav-group">
-            <button type="button" class="nav-trigger {{ $active === 'billing' ? 'on' : '' }}" aria-expanded="false" aria-haspopup="true">
-              <span class="ico">💳</span> Billing <span class="caret" aria-hidden="true">▾</span>
-            </button>
-            <div class="nav-menu" role="menu">
-              <a role="menuitem" href="{{ route('invoices.index') }}">Invoices</a>
-              <a role="menuitem" href="{{ route('payments.index') }}">Payments</a>
-            </div>
-          </div>
         @endif
 
         @if($isAdmin)
@@ -96,10 +86,8 @@
               <span class="ico">⚙️</span> Management <span class="caret" aria-hidden="true">▾</span>
             </button>
             <div class="nav-menu" role="menu">
-              <a role="menuitem" href="{{ route('branches.index') }}">Branches</a>
-              <a role="menuitem" href="{{ route('employees.index') }}">Employees</a>
+              <a role="menuitem" href="{{ route('specialties.index') }}">Specialties</a>
               <a role="menuitem" href="{{ route('accounts.index') }}">Accounts</a>
-              <a role="menuitem" href="{{ route('accounts.requests') }}">Staff requests</a>
             </div>
           </div>
         @endif

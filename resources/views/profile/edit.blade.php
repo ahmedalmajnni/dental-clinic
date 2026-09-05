@@ -87,7 +87,7 @@
             <tr><th>Role</th><td>{{ $account->role }}</td></tr>
             @if(! $isPatient)
               <tr><th>Job title</th><td>{{ str_replace('_', ' ', $job ?: '—') }}</td></tr>
-              <tr><th>Branch</th><td>{{ $account->employee?->branch?->name ?? '—' }}</td></tr>
+              <tr><th>Specialty</th><td>{{ $account->employee?->specialty ?? '—' }}</td></tr>
             @endif
             <tr><th>Member since</th><td>{{ $account->created_at?->format('d/m/Y') ?? '—' }}</td></tr>
             <tr><th>Last login</th><td>{{ $account->last_login?->format('d/m/Y H:i') ?? 'never' }}</td></tr>
@@ -100,7 +100,7 @@
           @if($isPatient)
             Your role is fixed. Contact the clinic if anything here is wrong.
           @else
-            Job title, branch and active status are managed by an administrator.
+            Job title, specialty and active status are managed by an administrator.
           @endif
         </p>
       </div>

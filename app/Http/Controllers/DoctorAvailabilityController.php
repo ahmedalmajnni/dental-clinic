@@ -46,7 +46,7 @@ class DoctorAvailabilityController extends Controller
 
         if ($user->role === 'admin') {
             return view('availability.index', [
-                'doctors' => Employee::with(['branch', 'availability'])
+                'doctors' => Employee::with('availability')
                     ->where('job_title', 'doctor')->orderBy('name')->get(),
                 'weekdays' => self::WEEKDAYS,
             ]);
@@ -199,15 +199,27 @@ class DoctorAvailabilityController extends Controller
         $doctor = Employee::find($request->query('doctor_id'));
         $date = $this->parseDate($request->query('date'));
 
-        if (! $doctor || ! $doctor->isDoctor() || ! $date) {
+        if (! $doctor || ! $doctor->isDoctor()) {
             return response()->json(['slots' => []]);
         }
 
-        $slots = $availability->slotsForDate($doctor, $date, $request->query('ignore') ?: null);
+        $ignore = $request->query('ignore') ?: null;
+        if ($date) {
+            $slots = array_map(fn (Carbon $slot) => $slot->format('H:i'), $availability->slotsForDate($doctor, $date, $ignore));
+        } else {
+            $slots = [];
+            $days = $availability->slotsForRange($doctor, now()->startOfDay(), now()->addDays(30), $ignore);
+            foreach ($days as $day => $daySlots) {
+                foreach ($daySlots as $slot) {
+                    $slots[] = [
+                        'date' => $day,
+                        'time' => $slot->format('H:i'),
+                    ];
+                }
+            }
+        }
 
-        return response()->json([
-            'slots' => array_map(fn (Carbon $slot) => $slot->format('H:i'), $slots),
-        ]);
+        return response()->json(['slots' => $slots]);
     }
 
     private function badInput(string $message)

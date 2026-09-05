@@ -2,25 +2,44 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Appointment;
+use App\Models\LabCase;
+use App\Models\Media;
 use App\Models\Patient;
+use App\Models\Report;
+use App\Models\Treatment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class PatientController extends Controller
 {
     public function index()
     {
+        $doctorId = $this->currentDoctorId();
+        $patients = Patient::query();
+        if ($doctorId) {
+            $patients->whereHas('appointments', fn ($query) => $query->where('doctor_id', $doctorId));
+        }
+
         return view('patients.index', [
-            'patients' => Patient::orderBy('name')->get(),          // active only (soft-deletes excluded)
-            'archivedCount' => Patient::onlyTrashed()->count(),
+            'patients' => $patients->orderBy('name')->get(),
+            'archivedCount' => Patient::onlyTrashed()
+                ->when($doctorId, fn ($query) => $query->whereHas('appointments', fn ($appointments) => $appointments->where('doctor_id', $doctorId)))
+                ->count(),
         ]);
     }
 
     // The archive ("recycle bin") — patients that have been archived.
     public function archived()
     {
+        $doctorId = $this->currentDoctorId();
+
         return view('patients.archived', [
-            'patients' => Patient::onlyTrashed()->orderBy('name')->get(),
+            'patients' => Patient::onlyTrashed()
+                ->when($doctorId, fn ($query) => $query->whereHas('appointments', fn ($appointments) => $appointments->where('doctor_id', $doctorId)))
+                ->orderBy('name')->get(),
         ]);
     }
 
@@ -45,9 +64,41 @@ class PatientController extends Controller
         ]);
     }
 
+    public function show(Patient $patient)
+    {
+        $doctorId = $this->currentDoctorId();
+        if ($doctorId && ! $patient->appointments()->where('doctor_id', $doctorId)->exists()) {
+            abort(403);
+        }
+
+        return view('patients.show', [
+            'patient' => $patient,
+            'appointments' => Appointment::with('doctor')->where('patient_id', $patient->id)->orderByDesc('scheduled_at')->get(),
+            'treatments' => Treatment::where('patient_id', $patient->id)->orderByDesc('created_at')->get(),
+            'reports' => Report::where('patient_id', $patient->id)->orderByDesc('created_at')->get(),
+            'labCases' => LabCase::with('doctor')->where('patient_id', $patient->id)->orderByDesc('created_at')->get(),
+            'media' => Media::where('patient_id', $patient->id)->orderByDesc('taken_at')->get(),
+        ]);
+    }
+
+    private function currentDoctorId(): ?string
+    {
+        $user = Auth::user();
+
+        return $user?->employee?->job_title === 'doctor' ? $user->employee_id : null;
+    }
+
     public function update(Request $request, Patient $patient)
     {
+        $password = (string) $request->input('password', '');
+        if ($password !== '' && strlen($password) < 6) {
+            return back()->withInput()->with('flash', ['type' => 'error', 'message' => 'Password must be at least 6 characters.']);
+        }
+
         $patient->update($this->data($request));
+        if ($password !== '' && $patient->account) {
+            $patient->account->update(['password_hash' => Hash::make($password)]);
+        }
 
         return redirect()->route('patients.index')->with('flash', ['type' => 'success', 'message' => 'Patient updated.']);
     }

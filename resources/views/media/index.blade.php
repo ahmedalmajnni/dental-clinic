@@ -9,7 +9,7 @@
   <div class="card"><p class="muted">No media yet. Add x-rays, scans, or photos by linking to where the file is stored.</p></div>
 @else
 <table>
-  <thead><tr><th>Taken</th><th>Patient</th><th>Type</th><th>Category</th><th>Branch</th><th>File</th><th></th></tr></thead>
+  <thead><tr><th>Taken</th><th>Patient</th><th>Type</th><th>Category</th><th>File</th><th>Cost</th><th></th></tr></thead>
   <tbody>
     @foreach($media as $m)
       <tr>
@@ -17,8 +17,8 @@
         <td>{{ $m->patient->name }}</td>
         <td><span class="badge">{{ $m->type }}</span></td>
         <td>{{ $m->category ?: '—' }}</td>
-        <td>{{ $m->branch->name ?? '—' }}</td>
         <td><a href="{{ $m->file_url }}" target="_blank" rel="noopener noreferrer">Open ↗</a></td>
+        <td>${{ number_format((float) $m->cost, 2) }}</td>
         <td class="actions">
           <a href="{{ route('media.edit', $m) }}" class="btn small secondary edit-action">Edit</a>
           <form method="POST" action="{{ route('media.destroy', $m) }}" onsubmit="return confirm('Delete this media record?');">

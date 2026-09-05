@@ -5,7 +5,7 @@
   <div class="card">
     <h1>Request staff access</h1>
     <p class="muted">Submit your details. A manager will review your request — you'll be able to log in once it's approved.</p>
-    @if($branches->isEmpty())
+    @if($specialties->isEmpty())
       <p class="muted">Registration isn't available yet. Please contact the clinic.</p>
     @else
     <form method="POST" action="{{ route('staff-register.store') }}">
@@ -13,11 +13,11 @@
       <label for="name">Full name</label>
       <input type="text" id="name" name="name" value="{{ old('name') }}" required autofocus>
 
-      <label for="branch_id">Branch</label>
-      <select id="branch_id" name="branch_id" required>
-        <option value="">— choose branch —</option>
-        @foreach($branches as $b)
-          <option value="{{ $b->id }}" {{ old('branch_id') === $b->id ? 'selected' : '' }}>{{ $b->name }}</option>
+      <label for="specialty">Specialty</label>
+      <select id="specialty" name="specialty">
+        <option value="">— choose specialty —</option>
+        @foreach($specialties as $specialty)
+          <option value="{{ $specialty->name }}" {{ old('specialty') === $specialty->name ? 'selected' : '' }}>{{ $specialty->name }}</option>
         @endforeach
       </select>
 

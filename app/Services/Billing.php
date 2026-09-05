@@ -33,6 +33,27 @@ class Billing
         ]);
     }
 
+    public static function addClinicalCharge(string $patientId, string $sourceColumn, string $sourceId, string $description, float $amount): void
+    {
+        $invoice = self::getOrCreateOpenInvoice($patientId);
+        InvoiceLine::create([
+            'invoice_id' => $invoice->id,
+            $sourceColumn => $sourceId,
+            'description' => $description,
+            'amount' => self::round2($amount),
+        ]);
+        self::recalcInvoice($invoice->id);
+    }
+
+    public static function removeClinicalCharge(string $sourceColumn, string $sourceId): void
+    {
+        $lines = InvoiceLine::where($sourceColumn, $sourceId)->get();
+        InvoiceLine::where($sourceColumn, $sourceId)->delete();
+        foreach ($lines->pluck('invoice_id')->unique() as $invoiceId) {
+            self::recalcInvoice($invoiceId);
+        }
+    }
+
     /** Recompute an invoice's total, balance and status from lines + payments. */
     public static function recalcInvoice(string $invoiceId): void
     {

@@ -4,7 +4,6 @@
 <div class="toolbar">
   <h1>Accounts</h1>
   <div class="actions">
-    <a href="{{ route('accounts.requests') }}" class="btn secondary">Staff requests</a>
     @if($type === 'staff')
       <a href="{{ route('accounts.create-staff') }}" class="btn">+ New staff account</a>
     @else
@@ -39,7 +38,7 @@
       <th>Name</th>
       @if($type === 'staff')
         <th>Job title</th>
-        <th>Branch</th>
+        <th>Specialty</th>
       @else
         <th>Phone</th>
         <th>Date of birth</th>
@@ -56,7 +55,7 @@
         @if($type === 'staff')
           <td>{{ $a->employee?->name ?? '—' }}</td>
           <td><span class="badge job">{{ str_replace('_', ' ', $a->employee?->job_title ?? $a->role) }}</span></td>
-          <td>{{ $a->employee?->branch?->name ?? '—' }}</td>
+          <td>{{ $a->employee?->specialty ?? '—' }}</td>
         @else
           <td>{{ $a->patient?->name ?? '—' }}</td>
           <td>{{ $a->patient?->phone ?: '—' }}</td>

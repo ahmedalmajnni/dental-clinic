@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
-use App\Models\Branch;
 use App\Models\Employee;
+use App\Models\Specialty;
 use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
@@ -13,13 +13,14 @@ class EmployeeController extends Controller
 
     public function index()
     {
-        return view('employees.index', ['employees' => Employee::with('branch')->orderBy('name')->get()]);
+        return view('employees.index', ['employees' => Employee::orderBy('name')->get()]);
     }
 
     public function create()
     {
         return view('employees.form', [
-            'employee' => new Employee(), 'branches' => Branch::orderBy('name')->get(),
+            'employee' => new Employee(),
+            'specialties' => Specialty::orderBy('name')->get(),
             'jobTitles' => self::JOBS, 'action' => route('employees.store'), 'method' => 'POST',
         ]);
     }
@@ -34,14 +35,15 @@ class EmployeeController extends Controller
     public function edit(Employee $employee)
     {
         return view('employees.form', [
-            'employee' => $employee, 'branches' => Branch::orderBy('name')->get(),
+            'employee' => $employee,
+            'specialties' => Specialty::orderBy('name')->get(),
             'jobTitles' => self::JOBS, 'action' => route('employees.update', $employee), 'method' => 'PUT',
         ]);
     }
 
     public function update(Request $request, Employee $employee)
     {
-        $employee->update($this->data($request));
+        $employee->update($this->data($request, $employee));
 
         return redirect()->route('employees.index')->with('flash', ['type' => 'success', 'message' => 'Employee updated.']);
     }
@@ -65,12 +67,12 @@ class EmployeeController extends Controller
         return redirect()->route('employees.index')->with('flash', ['type' => 'success', 'message' => 'Employee deleted.']);
     }
 
-    private function data(Request $request): array
+    private function data(Request $request, ?Employee $employee = null): array
     {
         return [
             'name' => $request->input('name'),
-            'branch_id' => $request->input('branch_id'),
             'job_title' => $request->input('job_title'),
+            'specialty' => $request->input('specialty') ?: null,
             'phone' => $request->input('phone') ?: null,
         ];
     }

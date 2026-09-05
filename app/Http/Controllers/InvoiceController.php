@@ -24,7 +24,7 @@ class InvoiceController extends Controller
     public function show(Invoice $invoice)
     {
         $invoice->load('patient');
-        $lines = InvoiceLine::with('treatment')->where('invoice_id', $invoice->id)
+        $lines = InvoiceLine::with(['treatment', 'labCase', 'media'])->where('invoice_id', $invoice->id)
             ->get()->sortBy(fn ($l) => optional($l->treatment)->created_at)->values();
         $payments = PaymentAllocation::with('payment')->where('invoice_id', $invoice->id)
             ->get()->sortBy(fn ($a) => optional($a->payment)->paid_at)->values();

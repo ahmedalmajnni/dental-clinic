@@ -18,11 +18,11 @@
       @endforeach
     </select>
 
-    <label for="branch_id">Branch</label>
-    <select id="branch_id" name="branch_id" required>
-      <option value="">— choose branch —</option>
-      @foreach($branches as $b)
-        <option value="{{ $b->id }}" @selected(old('branch_id', $employee->branch_id) === $b->id)>{{ $b->name }}</option>
+    <label for="specialty">Specialty</label>
+    <select id="specialty" name="specialty">
+      <option value="">— choose specialty —</option>
+      @foreach($specialties as $specialty)
+        <option value="{{ $specialty->name }}" @selected(old('specialty', $employee->specialty) === $specialty->name)>{{ $specialty->name }}</option>
       @endforeach
     </select>
 
@@ -34,8 +34,8 @@
       <a href="{{ route('employees.index') }}" class="btn secondary">Cancel</a>
     </div>
   </form>
-  @if($branches->isEmpty())
-    <p class="muted" style="margin-top:12px;">You need at least one branch first. <a href="{{ route('branches.create') }}">Create a branch</a>.</p>
+  @if($specialties->isEmpty())
+    <p class="muted" style="margin-top:12px;">You need at least one specialty first. <a href="{{ route('specialties.create') }}">Create a specialty</a>.</p>
   @endif
 </div>
 @endsection

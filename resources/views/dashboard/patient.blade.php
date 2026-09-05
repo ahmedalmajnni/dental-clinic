@@ -24,11 +24,8 @@
     <div class="eyebrow">Your next visit</div>
     <div class="when">{{ $nextAppointment->scheduled_at->format('l, d F Y \a\t H:i') }}</div>
     <div class="meta">
-      With {{ $nextAppointment->doctor?->name ?? 'one of our dentists' }}@if($nextAppointment->branch) at {{ $nextAppointment->branch->name }}@endif
+      With {{ $nextAppointment->doctor?->name ?? 'one of our dentists' }}@if($nextAppointment->doctor?->specialty) · {{ $nextAppointment->doctor->specialty }}@endif
     </div>
-    @if($nextAppointment->branch?->address)
-      <div class="meta">{{ $nextAppointment->branch->address }}</div>
-    @endif
     <div class="meta">That is {{ $nextAppointment->scheduled_at->diffForHumans() }} — please come about ten minutes early.</div>
   </div>
 @else
@@ -63,20 +60,11 @@
   </div>
 </div>
 
-@if($nextVisitNote && $nextVisitNote->next_visit)
-  <div class="alert-strip">
-    <a class="alert-pill info" href="{{ route('appointment-request.create') }}">
-      🗓 Your dentist suggested another look around {{ $nextVisitNote->next_visit->format('d/m/Y') }} — ask for a time
-    </a>
-  </div>
-@endif
-
 <div class="grid-2">
   <div>
     <div class="panel">
       <div class="panel-head">
         <h2>My appointment requests</h2>
-        <a href="{{ route('appointment-request.create') }}" class="btn small">+ Request a visit</a>
       </div>
       @if($requests->isEmpty())
         <div class="empty">
@@ -86,7 +74,7 @@
         </div>
       @else
         <table>
-          <thead><tr><th>Requested</th><th>Dentist</th><th>Clinic</th><th>Status</th><th>Clinic's reply</th></tr></thead>
+          <thead><tr><th>Requested</th><th>Dentist</th><th>Specialty</th><th>Status</th><th>Clinic's reply</th></tr></thead>
           <tbody>
             @foreach($requests as $r)
               <tr>
@@ -95,7 +83,7 @@
                   @if($r->preferred_date)<br><span class="muted">you asked for {{ $r->preferred_date->format('d/m/Y') }}</span>@endif
                 </td>
                 <td>{{ $r->doctor?->name ?? '—' }}</td>
-                <td>{{ $r->branch?->name ?? '—' }}</td>
+                <td>{{ $r->doctor?->specialty ?? '—' }}</td>
                 <td><span class="badge reqstat-{{ $r->status }}">{{ $REQ[$r->status] ?? $r->status }}</span></td>
                 <td>
                   @if($r->status === 'scheduled' && $r->appointment)
@@ -111,7 +99,6 @@
             @endforeach
           </tbody>
         </table>
-        <div class="panel-body"><a href="{{ route('my-requests') }}">See all my requests →</a></div>
       @endif
     </div>
 
@@ -124,13 +111,13 @@
         </div>
       @else
         <table>
-          <thead><tr><th>When</th><th>Dentist</th><th>Clinic</th><th>Status</th></tr></thead>
+          <thead><tr><th>When</th><th>Dentist</th><th>Specialty</th><th>Status</th></tr></thead>
           <tbody>
             @foreach($appointments as $a)
               <tr>
                 <td>{{ $a->scheduled_at->format('d/m/Y H:i') }}</td>
                 <td>{{ $a->doctor?->name ?? '—' }}</td>
-                <td>{{ $a->branch?->name ?? '—' }}</td>
+                <td>{{ $a->doctor?->specialty ?? '—' }}</td>
                 <td><span class="badge">{{ $VISIT[$a->status] ?? $a->status }}</span></td>
               </tr>
             @endforeach
@@ -148,7 +135,7 @@
           <div class="list-row">
             <div>
               <div class="who">{{ $d->name }}</div>
-              <div class="when">{{ $d->branch?->name ?? 'Our clinic' }}</div>
+              <div class="when">{{ $d->specialty ?? 'Dentist' }}</div>
             </div>
             <span class="badge job">Dentist</span>
           </div>

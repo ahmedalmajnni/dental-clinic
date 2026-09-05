@@ -4,7 +4,6 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AppointmentRequestController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\BranchController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DoctorAvailabilityController;
 use App\Http\Controllers\EmployeeController;
@@ -16,6 +15,7 @@ use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StaffRegistrationController;
+use App\Http\Controllers\SpecialtyController;
 use App\Http\Controllers\TreatmentController;
 use Illuminate\Support\Facades\Route;
 
@@ -46,6 +46,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Patient self-service: request an appointment and track its status.
     Route::middleware('role:patient')->group(function () {
         Route::get('request-appointment', [AppointmentRequestController::class, 'create'])->name('appointment-request.create');
+        Route::get('request-appointment/slots', [AppointmentRequestController::class, 'slots'])->name('appointment-request.slots');
         Route::post('request-appointment', [AppointmentRequestController::class, 'store'])->name('appointment-request.store');
         Route::get('my-requests', [AppointmentRequestController::class, 'mine'])->name('my-requests');
         Route::post('my-requests/{appointmentRequest}/cancel', [AppointmentRequestController::class, 'cancel'])->name('my-requests.cancel');
@@ -53,7 +54,7 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     // Admin-only management areas
     Route::middleware('role:admin')->group(function () {
-        Route::resource('branches', BranchController::class)->except('show');
+        Route::resource('specialties', SpecialtyController::class)->except('show');
         // Employees can no longer be added by hand — they self-register and are
         // approved. We keep listing/editing/removing existing employees.
         Route::resource('employees', EmployeeController::class)->except(['show', 'create', 'store']);
@@ -79,6 +80,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('patients/{id}/restore', [PatientController::class, 'restore'])->name('patients.restore');
         Route::delete('patients/{id}/force', [PatientController::class, 'forceDelete'])->name('patients.force-delete');
         Route::resource('patients', PatientController::class)->except('show');
+        Route::get('patients/{patient}', [PatientController::class, 'show'])->name('patients.show');
+        Route::delete('appointments/{appointment}/force', [AppointmentController::class, 'forceDelete'])->name('appointments.force-delete');
         Route::resource('appointments', AppointmentController::class)->except('show');
         Route::resource('treatments', TreatmentController::class);
         Route::resource('lab-cases', LabCaseController::class)->except('show')->parameters(['lab-cases' => 'labCase']);
@@ -92,6 +95,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('payments/new', [PaymentController::class, 'create'])->name('payments.create');
         Route::get('payments/patient/{patient}', [PaymentController::class, 'forPatient'])->name('payments.patient');
         Route::post('payments', [PaymentController::class, 'store'])->name('payments.store');
+        Route::get('payments/{payment}/edit', [PaymentController::class, 'edit'])->name('payments.edit');
+        Route::put('payments/{payment}', [PaymentController::class, 'update'])->name('payments.update');
 
         // Appointment-request queue (staff process patient requests here).
         Route::get('requests', [AppointmentRequestController::class, 'queue'])->name('requests.index');

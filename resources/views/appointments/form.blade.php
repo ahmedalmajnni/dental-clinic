@@ -24,33 +24,14 @@
       @endforeach
     </select>
 
-    <label for="branch_id">Branch</label>
-    <select id="branch_id" name="branch_id" required>
-      <option value="">— choose branch —</option>
-      @foreach($branches as $b)
-        <option value="{{ $b->id }}" @selected(old('branch_id', $appointment->branch_id) === $b->id)>{{ $b->name }}</option>
-      @endforeach
-    </select>
-
-    <label for="scheduled_at">Date &amp; time</label>
-    <input type="datetime-local" id="scheduled_at" name="scheduled_at" required
+    <input type="hidden" id="scheduled_at" name="scheduled_at"
            value="{{ old('scheduled_at', optional($appointment->scheduled_at)->format('Y-m-d\TH:i')) }}">
 
-    <label for="slot_pick">Open times</label>
-    <select id="slot_pick">
-      <option value="">— choose a doctor and a date —</option>
+    <label for="slot_pick">Available times</label>
+    <select id="slot_pick" required>
+      <option value="">— choose a doctor —</option>
     </select>
-    <p class="muted" id="slot_note">Pick a doctor and a date and this lists the times they are actually free.</p>
-
-    @if(auth()->user()->role === 'admin')
-      {{-- Reception must not be able to quietly fill a doctor's day off; the
-           clinic owner sometimes has to squeeze in an emergency. --}}
-      <label for="ignore_availability" style="font-weight:400;">
-        <input type="checkbox" id="ignore_availability" name="ignore_availability" value="1"
-               style="width:auto; margin-right:6px;" @checked(old('ignore_availability'))>
-        Book outside the doctor's hours
-      </label>
-    @endif
+    <p class="muted" id="slot_note">Pick a doctor to see their available times.</p>
 
     <label for="status">Status</label>
     <select id="status" name="status">
@@ -70,8 +51,10 @@
     <textarea id="notes" name="notes" placeholder="Treatment given, advice, follow-up…">{{ old('notes', $report->notes ?? '') }}</textarea>
 
     <label for="next_visit">Next visit</label>
-    <input type="date" id="next_visit" name="next_visit"
-           value="{{ old('next_visit', optional($report->next_visit ?? null)->format('Y-m-d')) }}">
+    <select id="next_visit" name="next_visit">
+      <option value="">— choose an available time —</option>
+    </select>
+    <p class="muted" id="next_visit_note">Choose a doctor to see available times for the next visit.</p>
 
     <div class="actions" style="margin-top:18px;">
       <button type="submit" class="btn">Save</button>
@@ -88,38 +71,68 @@
   var whenField = document.getElementById('scheduled_at');
   var slotField = document.getElementById('slot_pick');
   var slotNote = document.getElementById('slot_note');
+  var nextVisitField = document.getElementById('next_visit');
+  var nextVisitNote = document.getElementById('next_visit_note');
+  var savedNextVisit = @json(old('next_visit', optional($report->next_visit ?? null)->format('Y-m-d')));
   var pending = 0;
+
+  function displayTime(time) {
+    var parts = time.split(':');
+    var hour = Number(parts[0]);
+    var suffix = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12;
+    return hour + ':' + parts[1] + ' ' + suffix;
+  }
 
   function setSlots(times, message) {
     slotField.innerHTML = '';
     var first = document.createElement('option');
     first.value = '';
-    first.textContent = times.length ? '— pick a free time —' : '— no free times —';
+    first.textContent = times.length ? '— pick an open time —' : '— no free times —';
     slotField.appendChild(first);
 
-    var chosen = whenField.value.slice(11, 16);
+    var chosen = whenField.value.slice(0, 16);
     times.forEach(function (t) {
+      var date = typeof t === 'string' ? '' : t.date;
+      var time = typeof t === 'string' ? t : t.time;
       var opt = document.createElement('option');
-      opt.value = t;
-      opt.textContent = t;
-      if (t === chosen) opt.selected = true;
+      opt.value = date + '|' + time;
+      opt.textContent = date + ' at ' + displayTime(time);
+      if (date + 'T' + time === chosen) opt.selected = true;
       slotField.appendChild(opt);
     });
     slotNote.textContent = message;
+
+    nextVisitField.innerHTML = '';
+    var nextVisitFirst = document.createElement('option');
+    nextVisitFirst.value = '';
+    nextVisitFirst.textContent = times.length ? '— choose an available time —' : '— no available times —';
+    nextVisitField.appendChild(nextVisitFirst);
+    times.forEach(function (t) {
+      var date = typeof t === 'string' ? '' : t.date;
+      var time = typeof t === 'string' ? t : t.time;
+      var nextVisitOption = document.createElement('option');
+      nextVisitOption.value = date + '|' + time;
+      nextVisitOption.textContent = date + ' at ' + displayTime(time);
+      if (date === savedNextVisit) nextVisitOption.selected = true;
+      nextVisitField.appendChild(nextVisitOption);
+    });
+    nextVisitNote.textContent = times.length
+      ? 'Choose an available time for the patient\'s next visit.'
+      : 'No available times in the next 30 days.';
   }
 
   function loadSlots() {
     var doctor = doctorField.value;
-    var date = whenField.value.slice(0, 10);
-    if (!doctor || !date) {
-      setSlots([], 'Pick a doctor and a date and this lists the times they are actually free.');
+    if (!doctor) {
+      setSlots([], 'Pick a doctor to see their available times.');
       return;
     }
 
     // Answers can come back out of order when the user keeps changing the date,
     // so only the newest request is allowed to paint the list.
     var ticket = ++pending;
-    var url = SLOTS_URL + '?doctor_id=' + encodeURIComponent(doctor) + '&date=' + encodeURIComponent(date);
+    var url = SLOTS_URL + '?doctor_id=' + encodeURIComponent(doctor);
     if (IGNORE_ID) url += '&ignore=' + encodeURIComponent(IGNORE_ID);
 
     fetch(url, { headers: { 'Accept': 'application/json' } })
@@ -128,8 +141,8 @@
         if (ticket !== pending) return;
         var times = data.slots || [];
         setSlots(times, times.length
-          ? 'Choosing a time here fills in the box above.'
-          : 'No open times that day — try another date, or set the doctor\'s hours under Availability.');
+          ? 'Choose an available time to book the appointment.'
+          : 'No available times in the next 30 days.');
       })
       .catch(function () {
         if (ticket === pending) setSlots([], 'Could not load open times.');
@@ -138,11 +151,11 @@
 
   slotField.addEventListener('change', function () {
     if (!slotField.value) return;
-    whenField.value = whenField.value.slice(0, 10) + 'T' + slotField.value;
+    var picked = slotField.value.split('|');
+    whenField.value = picked[0] + 'T' + picked[1];
   });
 
   doctorField.addEventListener('change', loadSlots);
-  whenField.addEventListener('change', loadSlots);
   loadSlots();
 </script>
 @endsection

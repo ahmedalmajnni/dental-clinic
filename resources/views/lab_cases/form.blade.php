@@ -8,21 +8,14 @@
     @csrf
     @if($method === 'PUT') @method('PUT') @endif
 
-    <label for="patient_id">Patient</label>
-    <select id="patient_id" name="patient_id" required>
-      <option value="">— choose patient —</option>
-      @foreach($patients as $p)
-        <option value="{{ $p->id }}" @selected(old('patient_id', $labCase->patient_id) === $p->id)>{{ $p->name }}</option>
+    <label for="appointment_id">Visit</label>
+    <select id="appointment_id" name="appointment_id" required>
+      <option value="">— choose a visit —</option>
+      @foreach($appointments as $a)
+        <option value="{{ $a->id }}" data-due-date="{{ $a->report->next_visit->copy()->subDay()->format('Y-m-d') }}">P: {{ $a->patient->name }} __ D: {{ $a->doctor->name }} __ {{ $a->scheduled_at->format('d/m/Y') }}</option>
       @endforeach
     </select>
-
-    <label for="doctor_id">Supervising doctor</label>
-    <select id="doctor_id" name="doctor_id" required>
-      <option value="">— choose doctor —</option>
-      @foreach($doctors as $d)
-        <option value="{{ $d->id }}" @selected(old('doctor_id', $labCase->doctor_id) === $d->id)>{{ $d->name }} ({{ $d->job_title }})</option>
-      @endforeach
-    </select>
+    <p class="muted">Only completed appointments with a next visit are available.</p>
 
     <label for="type">Type of work</label>
     <input type="text" id="type" name="type" list="type-options" maxlength="60"
@@ -33,6 +26,7 @@
 
     <label for="due_date">Due date</label>
     <input type="date" id="due_date" name="due_date" value="{{ old('due_date', optional($labCase->due_date)->format('Y-m-d')) }}">
+    <p class="muted">Automatically set to one day before the selected visit's next visit. You can change it.</p>
 
     <label for="status">Status</label>
     <select id="status" name="status">
@@ -50,4 +44,16 @@
     </div>
   </form>
 </div>
+<script>
+  var visitField = document.getElementById('appointment_id');
+  var dueDateField = document.getElementById('due_date');
+
+  function updateDueDate() {
+    var selected = visitField.options[visitField.selectedIndex];
+    dueDateField.value = selected ? (selected.dataset.dueDate || '') : '';
+  }
+
+  visitField.addEventListener('change', updateDueDate);
+  updateDueDate();
+</script>
 @endsection

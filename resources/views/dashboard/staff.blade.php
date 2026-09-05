@@ -6,26 +6,17 @@
   $greeting = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good evening');
   $who = $employee?->name ?: auth()->user()->name;
   $role = $employee ? ucfirst(str_replace('_', ' ', $employee->job_title)) : 'Administrator';
-  $branchName = $employee?->branch?->name;
+  $specialty = $employee?->specialty;
 
   // A doctor sees only their own day, so naming the doctor on every row is noise.
   $showDoctor = ! ($isDoctor && ! $seesAll);
   $stillBooked = $todays->where('status', 'booked')->count();
 
-  // Last month at zero gives nothing to divide by — say so instead of a percentage.
-  $trendClass = 'flat';
-  $trendText = 'no comparison with last month';
-  if ($revenuePrevMonth > 0) {
-      $change = ($revenueMonth - $revenuePrevMonth) / $revenuePrevMonth * 100;
-      $trendClass = $change > 0 ? 'up' : ($change < 0 ? 'down' : 'flat');
-      $trendText = ($change > 0 ? '▲ ' : ($change < 0 ? '▼ ' : '')) . number_format(abs($change), 1) . '% vs last month';
-  }
-
-  $hasAlerts = ($isAdmin && $pendingStaff > 0) || $pendingRequests > 0
-      || $labAttention->isNotEmpty() || $outstanding > 0;
+    $hasAlerts = ($isAdmin && $pendingStaff > 0) || $pendingRequests > 0
+      || $labAttention->isNotEmpty();
 
   $glance = [
-    'branch' => ['Branches', 'branches.index'],
+    'specialty' => ['Specialties', 'specialties.index'],
     'employee' => ['Employees', 'employees.index'],
     'patient' => ['Patients', 'patients.index'],
     'appointment' => ['Appointments', 'appointments.index'],
@@ -40,7 +31,7 @@
 <div class="page-head">
   <div>
     <h1>{{ $greeting }}, {{ $who }}</h1>
-    <div class="sub">{{ $role }}@if($branchName) · {{ $branchName }}@endif</div>
+    <div class="sub">{{ $role }}@if($specialty) · {{ $specialty }}@endif</div>
   </div>
   <div class="sub">{{ now()->format('l, d F Y') }}</div>
 </div>
@@ -62,11 +53,6 @@
         Lab work due soon <span class="count">{{ $labAttention->count() }}</span>
       </a>
     @endif
-    @if($outstanding > 0)
-      <a class="alert-pill danger" href="{{ route('invoices.index') }}">
-        Unpaid balance <span class="count">${{ number_format($outstanding, 2) }}</span>
-      </a>
-    @endif
   </div>
 @endif
 
@@ -80,16 +66,6 @@
     <div class="kpi-label">Patients</div>
     <div class="kpi-value">{{ $counts['patient'] }}</div>
     <div class="kpi-sub">On the books</div>
-  </a>
-  <a class="kpi money" href="{{ route('invoices.index') }}">
-    <div class="kpi-label">Outstanding</div>
-    <div class="kpi-value">${{ number_format($outstanding, 2) }}</div>
-    <div class="kpi-sub">Across all open bills</div>
-  </a>
-  <a class="kpi accent" href="{{ route('payments.index') }}">
-    <div class="kpi-label">Revenue this month</div>
-    <div class="kpi-value">${{ number_format($revenueMonth, 2) }}</div>
-    <div class="trend {{ $trendClass }}">{{ $trendText }}</div>
   </a>
 </div>
 
@@ -112,7 +88,7 @@
               <th>Time</th>
               <th>Patient</th>
               @if($showDoctor)<th>Doctor</th>@endif
-              <th>Branch</th>
+              <th>Specialty</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -122,7 +98,7 @@
                 <td>{{ $a->scheduled_at->format('H:i') }}</td>
                 <td>{{ $a->patient?->name ?? '—' }}</td>
                 @if($showDoctor)<td>{{ $a->doctor?->name ?? '—' }}</td>@endif
-                <td>{{ $a->branch?->name ?? '—' }}</td>
+                <td>{{ $a->doctor?->specialty ?? '—' }}</td>
                 <td><span class="badge">{{ $a->status }}</span></td>
               </tr>
             @endforeach
@@ -141,7 +117,7 @@
           <div class="list-row">
             <div>
               <div class="who">{{ $a->patient?->name ?? '—' }}</div>
-              <div class="when">{{ $a->doctor?->name ?? '—' }}@if($a->branch) · {{ $a->branch->name }}@endif</div>
+              <div class="when">{{ $a->doctor?->name ?? '—' }}@if($a->doctor?->specialty) · {{ $a->doctor->specialty }}@endif</div>
             </div>
             <div class="when">{{ $a->scheduled_at->format('d/m/Y H:i') }}</div>
           </div>
@@ -157,12 +133,11 @@
         <a class="qa" href="{{ route('patients.create') }}"><span class="ico">🧑</span> New patient</a>
         <a class="qa" href="{{ route('appointments.create') }}"><span class="ico">📅</span> Book appointment</a>
         <a class="qa" href="{{ route('treatments.create') }}"><img class="qa-logo-icon" src="{{ asset('images/logo.svg') }}" alt=""> Record treatment</a>
-        <a class="qa" href="{{ route('payments.create') }}"><span class="ico">💵</span> Take payment</a>
         <a class="qa" href="{{ route('requests.index') }}"><span class="ico">📥</span> Appointment requests</a>
         <a class="qa" href="{{ route('lab-cases.create') }}"><span class="ico">🔬</span> New lab case</a>
         <a class="qa" href="{{ route('media.create') }}"><span class="ico">🖼</span> Upload media</a>
         @if($isAdmin)
-          <a class="qa" href="{{ route('branches.index') }}"><span class="ico">🏢</span> Branches</a>
+          <a class="qa" href="{{ route('specialties.index') }}"><span class="ico">🦷</span> Specialties</a>
           <a class="qa" href="{{ route('employees.index') }}"><span class="ico">👥</span> Employees</a>
           <a class="qa" href="{{ route('accounts.index') }}"><span class="ico">🔑</span> Accounts</a>
         @endif
@@ -192,29 +167,6 @@
 </div>
 
 <div class="grid-2">
-  <div class="panel">
-    <div class="panel-head">
-      <h2>Recent payments</h2>
-      <a href="{{ route('payments.index') }}">All payments →</a>
-    </div>
-    @if($recentPayments->isEmpty())
-      <div class="empty">
-        <span class="icon">💵</span>
-        No payments recorded yet.
-      </div>
-    @else
-      @foreach($recentPayments as $p)
-        <div class="list-row">
-          <div>
-            <div class="who">{{ $p->patient?->name ?? '—' }}</div>
-            <div class="when">{{ $p->method }} · {{ $p->paid_at->format('d/m/Y H:i') }}</div>
-          </div>
-          <div class="amount">${{ number_format($p->amount, 2) }}</div>
-        </div>
-      @endforeach
-    @endif
-  </div>
-
   <div class="panel">
     <div class="panel-head">
       <h2>New patients</h2>

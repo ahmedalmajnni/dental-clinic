@@ -11,7 +11,7 @@ class Appointment extends Model
 
     protected $table = 'appointment';
     public $timestamps = false;
-    protected $fillable = ['patient_id', 'doctor_id', 'branch_id', 'scheduled_at', 'status'];
+    protected $fillable = ['patient_id', 'doctor_id', 'scheduled_at', 'status'];
     protected $casts = ['scheduled_at' => 'datetime', 'created_at' => 'datetime'];
 
     public function patient()
@@ -24,8 +24,9 @@ class Appointment extends Model
         return $this->belongsTo(Employee::class, 'doctor_id');
     }
 
-    public function branch()
+    public function report()
     {
-        return $this->belongsTo(Branch::class);
+        return $this->hasOne(Report::class);
     }
 }
+

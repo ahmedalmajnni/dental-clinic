@@ -11,13 +11,8 @@ class Employee extends Model
 
     protected $table = 'employee';
     public $timestamps = false;
-    protected $fillable = ['branch_id', 'name', 'job_title', 'specialty', 'phone'];
+    protected $fillable = ['name', 'job_title', 'specialty', 'phone'];
     protected $casts = ['created_at' => 'datetime'];
-
-    public function branch()
-    {
-        return $this->belongsTo(Branch::class);
-    }
 
     public function account()
     {

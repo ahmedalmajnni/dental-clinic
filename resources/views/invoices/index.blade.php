@@ -3,7 +3,6 @@
 @section('content')
 <div class="toolbar">
   <h1>Invoices</h1>
-  <a href="{{ route('payments.create') }}" class="btn">+ Record a payment</a>
 </div>
 @if($invoices->isEmpty())
   <div class="card"><p class="muted">No invoices yet. They are created automatically when a treatment is saved.</p></div>

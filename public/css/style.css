@@ -464,10 +464,10 @@ body { background:var(--bg); color:var(--ink); font-family:'Manrope',sans-serif;
 h1,h2,h3 { font-family:'Fraunces',serif; font-weight:600; }
 nav.topbar { background:var(--brand); padding:0 28px; }
 nav.topbar .brand, .landing-nav .brand { display:inline-flex; align-items:center; gap:8px; font-family:'Fraunces',serif; }
-nav.topbar .brand img { width:28px; height:28px; border-radius:4px; }
+nav.topbar .brand img { width:40px; height:40px; object-fit:contain; border-radius:4px; }
 .landing-nav { padding:16px 28px; background:#fff; }
 .landing-nav .brand { color:var(--brand); }
-.landing-nav .brand img { width:32px; height:32px; }
+.landing-nav .brand img { width:40px; height:40px; object-fit:contain; }
 .nav-item,.nav-trigger { color:#dce9ce; font-size:.88rem; }
 .nav-logo-icon { width:18px; height:18px; background:#fff; border-radius:50%; padding:2px; }
 .nav-item:hover,.nav-trigger:hover,.nav-group:hover .nav-trigger,.nav-group.open .nav-trigger { background:rgba(255,255,255,.12); }

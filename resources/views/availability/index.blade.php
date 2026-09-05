@@ -14,7 +14,7 @@
   <div class="card"><p class="muted">No doctors yet.</p></div>
 @else
 <table>
-  <thead><tr><th>Doctor</th><th>Branch</th><th>Weekly hours</th><th>Exceptions</th><th></th></tr></thead>
+  <thead><tr><th>Doctor</th><th>Specialty</th><th>Weekly hours</th><th>Exceptions</th><th></th></tr></thead>
   <tbody>
     @foreach($doctors as $d)
       @php
@@ -23,7 +23,7 @@
       @endphp
       <tr>
         <td>{{ $d->name }}</td>
-        <td>{{ $d->branch->name ?? '—' }}</td>
+        <td>{{ $d->specialty ?? '—' }}</td>
         <td>
           @if($byDay->isEmpty())
             <span class="badge kind-off">Not bookable — no hours set</span>

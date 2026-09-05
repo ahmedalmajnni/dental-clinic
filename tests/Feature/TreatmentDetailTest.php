@@ -12,14 +12,8 @@ class TreatmentDetailTest extends TestCase
     {
         parent::setUp();
 
-        Schema::create('branch', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('name');
-        });
-
         Schema::create('employee', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('branch_id');
             $table->string('name');
             $table->string('job_title');
         });
@@ -46,7 +40,6 @@ class TreatmentDetailTest extends TestCase
             $table->uuid('id')->primary();
             $table->uuid('patient_id');
             $table->uuid('doctor_id');
-            $table->uuid('branch_id');
             $table->dateTime('scheduled_at');
             $table->string('status')->default('booked');
         });
@@ -73,19 +66,16 @@ class TreatmentDetailTest extends TestCase
 
         $patientId = '11111111-1111-1111-1111-111111111111';
         $doctorId = '22222222-2222-2222-2222-222222222222';
-        $branchId = '33333333-3333-3333-3333-333333333333';
         $appointmentId = '44444444-4444-4444-4444-444444444444';
         $treatmentId = '55555555-5555-5555-5555-555555555555';
         $reportId = '66666666-6666-6666-6666-666666666666';
 
-        \DB::table('branch')->insert(['id' => $branchId, 'name' => 'Aleppo Clinic']);
-        \DB::table('employee')->insert(['id' => $doctorId, 'branch_id' => $branchId, 'name' => 'Dr. Samer', 'job_title' => 'doctor']);
+        \DB::table('employee')->insert(['id' => $doctorId, 'name' => 'Dr. Samer', 'job_title' => 'doctor']);
         \DB::table('patient')->insert(['id' => $patientId, 'name' => 'Khaled Ali', 'email' => 'khaled@example.com']);
         \DB::table('appointment')->insert([
             'id' => $appointmentId,
             'patient_id' => $patientId,
             'doctor_id' => $doctorId,
-            'branch_id' => $branchId,
             'scheduled_at' => '2026-08-28 10:00:00',
             'status' => 'completed',
         ]);

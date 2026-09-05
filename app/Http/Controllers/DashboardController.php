@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Account;
 use App\Models\Appointment;
 use App\Models\AppointmentRequest;
-use App\Models\Branch;
 use App\Models\Employee;
 use App\Models\Invoice;
 use App\Models\LabCase;
@@ -36,14 +35,14 @@ class DashboardController extends Controller
         $pid = $user->patient_id;
         $now = now();
 
-        $nextAppointment = Appointment::with(['doctor', 'branch'])
+        $nextAppointment = Appointment::with('doctor')
             ->where('patient_id', $pid)
             ->where('status', 'booked')
             ->where('scheduled_at', '>=', $now)
             ->orderBy('scheduled_at')
             ->first();
 
-        $appointments = Appointment::with(['doctor', 'branch'])
+        $appointments = Appointment::with('doctor')
             ->where('patient_id', $pid)
             ->orderByDesc('scheduled_at')
             ->limit(6)
@@ -60,7 +59,7 @@ class DashboardController extends Controller
 
         $outstanding = (float) $invoices->sum(fn ($i) => (float) $i->balance);
 
-        $requests = AppointmentRequest::with(['doctor', 'branch', 'appointment'])
+        $requests = AppointmentRequest::with(['doctor', 'appointment'])
             ->where('patient_id', $pid)
             ->orderByDesc('created_at')
             ->limit(5)
@@ -82,7 +81,7 @@ class DashboardController extends Controller
             ->first();
 
         // The doctors this patient has actually been seen by.
-        $careTeam = Employee::with('branch')
+        $careTeam = Employee::query()
             ->whereIn('id', Appointment::where('patient_id', $pid)->distinct()->pluck('doctor_id'))
             ->orderBy('name')
             ->get();
@@ -116,13 +115,13 @@ class DashboardController extends Controller
         $scopeToDoctor = $isDoctor && ! $seesAll;
         $doctorId = $user->employee_id;
 
-        $todays = Appointment::with(['patient', 'doctor', 'branch'])
+        $todays = Appointment::with(['patient', 'doctor'])
             ->whereDate('scheduled_at', $today)
             ->when($scopeToDoctor, fn ($q) => $q->where('doctor_id', $doctorId))
             ->orderBy('scheduled_at')
             ->get();
 
-        $upcoming = Appointment::with(['patient', 'doctor', 'branch'])
+        $upcoming = Appointment::with(['patient', 'doctor'])
             ->where('scheduled_at', '>', $now)
             ->whereDate('scheduled_at', '<=', $today->copy()->addDays(7))
             ->where('status', 'booked')
@@ -140,14 +139,6 @@ class DashboardController extends Controller
             ? Account::where('role', 'employee')->where('is_active', false)->count()
             : 0;
 
-        $outstanding = (float) Invoice::whereIn('status', ['open', 'partial'])->sum('balance');
-
-        $revenueMonth = (float) Payment::where('paid_at', '>=', $now->copy()->startOfMonth())->sum('amount');
-        $revenuePrevMonth = (float) Payment::whereBetween('paid_at', [
-            $now->copy()->subMonthNoOverflow()->startOfMonth(),
-            $now->copy()->subMonthNoOverflow()->endOfMonth(),
-        ])->sum('amount');
-
         // Lab work that needs chasing: still open, and due within three days or
         // already overdue.
         $labAttention = LabCase::with(['patient', 'doctor'])
@@ -159,12 +150,15 @@ class DashboardController extends Controller
             ->limit(6)
             ->get();
 
-        $recentPayments = Payment::with('patient')->orderByDesc('paid_at')->limit(5)->get();
         $recentTreatments = Treatment::with('patient')->orderByDesc('created_at')->limit(5)->get();
-        $recentPatients = Patient::orderByDesc('created_at')->limit(5)->get();
+        $recentPatients = Patient::query()
+            ->when($scopeToDoctor, fn ($q) => $q->whereHas('appointments', fn ($appointments) => $appointments->where('doctor_id', $doctorId)))
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
 
         $counts = [
-            'branch' => Branch::count(),
+            'specialty' => \App\Models\Specialty::count(),
             'employee' => Employee::count(),
             'patient' => Patient::count(),
             'appointment' => Appointment::count(),
@@ -176,8 +170,7 @@ class DashboardController extends Controller
 
         return view('dashboard.staff', compact(
             'isAdmin', 'isDoctor', 'seesAll', 'employee', 'todays', 'upcoming',
-            'pendingRequests', 'pendingStaff', 'outstanding', 'revenueMonth',
-            'revenuePrevMonth', 'labAttention', 'recentPayments', 'recentTreatments',
+            'pendingRequests', 'pendingStaff', 'labAttention', 'recentTreatments',
             'recentPatients', 'counts'
         ));
     }

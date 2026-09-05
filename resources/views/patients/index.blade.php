@@ -18,7 +18,7 @@
   <tbody>
     @foreach($patients as $p)
       <tr>
-        <td>{{ $p->name }}</td>
+        <td><a href="{{ route('patients.show', $p) }}">{{ $p->name }}</a></td>
         <td>{{ $p->dob ? $p->dob->format('d/m/Y') : '—' }}</td>
         <td>{{ $p->phone ?: '—' }}</td>
         <td>{{ $p->email ?: '—' }}</td>
